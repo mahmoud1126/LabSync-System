@@ -3,56 +3,55 @@
 require_once __DIR__ . '/Researcher.php';
 
 class GuestResearcher extends Researcher {
-    public function __construct()
-    {
+    public function __construct(){
         parent::__construct();
     }
 
-    public function getRole()
-    {
+    public function getRole(){
         return 'guest_researcher';
     }
 
-   public function createGuestResearcher($userName, $userPassword, $institution, $expirationDate, $sponsorPiID, $clearanceLevel ){
-    $this->db->beginTransaction();
-
-    $sql = "INSERT INTO users (userName, userPassword, userType, userStatus, clearanceLevel)
-            VALUES (:name, :password, :type, :status, :clearance)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-        ':name'      => $userName,
-        ':password'  => password_hash($userPassword, PASSWORD_DEFAULT),
-        ':type'      => 'guest_researcher',
-        ':status'    => 'active',
-        ':clearance' => $clearanceLevel
-    ]);
-
-    $userID = $this->db->lastInsertId();
+    public function createGuestResearcher( $userName, $userPassword, $institution, $expirationDate, $sponsorPIID,  $clearanceLevel = 0, $maxBookingHoursPerWeek = 20) {
+        try {
+            $this->db->beginTransaction();
 
 
-    $sql = "INSERT INTO guest_researchers (userID, institution, expirationDate, sponsorPiID)
-            VALUES (:userID, :institution, :expirationDate, :sponsorPiID)";
-    $stmt = $this->db->prepare($sql);
-    $stmt->execute([
-        ':userID'          => $userID,
-        ':institution'     => $institution,
-        ':expirationDate'  => $expirationDate,
-        ':sponsorPiID'     => $sponsorPiID
-    ]);
+            $userID = $this->createUser(
+                $userName,
+                $userPassword,
+                'guest_researcher',
+                'active',
+                $clearanceLevel,
+                true,                    
+                $maxBookingHoursPerWeek  
+            );
 
-    $this->db->commit();
-    return $userID;
+            $sql = "INSERT INTO GuestResearchers (userID, institution, expirationDate, sponsorPIID)
+                    VALUES (:userID, :institution, :expirationDate, :sponsorPIID)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':userID'          => $userID,
+                ':institution'     => $institution,
+                ':expirationDate'  => $expirationDate,
+                ':sponsorPIID'     => $sponsorPIID
+            ]);
+
+            $this->db->commit();
+
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            throw $e; 
+        }
     }
-
 
 
     public function getGuestResearcherById($userID)
     {
-        $sql = "SELECT u.*, gr.guestID, gr.institution, gr.expirationDate, gr.sponsorPiID,
-                       sponsor.userName AS sponsorName
-                FROM users u
-                JOIN guest_researchers gr ON u.userID = gr.userID
-                LEFT JOIN users sponsor ON gr.sponsorPiID = sponsor.userID
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+                sponsor.userName AS sponsorName
+                FROM Users u
+                JOIN GuestResearchers gr ON u.userID = gr.userID
+                LEFT JOIN Users sponsor ON gr.sponsorPIID = sponsor.userID
                 WHERE u.userID = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $userID]);
@@ -62,11 +61,11 @@ class GuestResearcher extends Researcher {
 
     public function getAllGuestResearchers()
     {
-        $sql = "SELECT u.*, gr.guestID, gr.institution, gr.expirationDate, gr.sponsorPiID,
-                       sponsor.userName AS sponsorName
-                FROM users u
-                JOIN guest_researchers gr ON u.userID = gr.userID
-                LEFT JOIN users sponsor ON gr.sponsorPiID = sponsor.userID
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+                sponsor.userName AS sponsorName
+                FROM Users u
+                JOIN GuestResearchers gr ON u.userID = gr.userID
+                LEFT JOIN Users sponsor ON gr.sponsorPIID = sponsor.userID
                 WHERE u.userType = 'guest_researcher'
                 ORDER BY u.userID DESC";
         $stmt = $this->db->prepare($sql);
@@ -75,29 +74,24 @@ class GuestResearcher extends Researcher {
     }
 
 
-    public function getGuestsBySponsor($sponsorPiID)
+    public function getGuestsBySponsor($sponsorPIID)
     {
         $sql = "SELECT u.*, gr.institution, gr.expirationDate
-                FROM users u
-                JOIN guest_researchers gr ON u.userID = gr.userID
-                WHERE gr.sponsorPiID = :sponsorID
+                FROM Users u
+                JOIN GuestResearchers gr ON u.userID = gr.userID
+                WHERE gr.sponsorPIID = :sponsorID
                 ORDER BY gr.expirationDate ASC";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':sponsorID' => $sponsorPiID]);
+        $stmt->execute([':sponsorID' => $sponsorPIID]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
     public function isExpired($userID)
     {
-        $sql = "SELECT expirationDate FROM guest_researchers WHERE userID = :id";
+        $sql = "SELECT expirationDate FROM GuestResearchers WHERE userID = :id";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $userID]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$row) {
-            return true;
-        }
 
         return (strtotime($row['expirationDate']) < time());
     }
@@ -108,54 +102,24 @@ class GuestResearcher extends Researcher {
         try {
             $this->db->beginTransaction();
 
-
+            
             $this->updateStatus($userID, 'inactive');
 
-
-            $sql = "UPDATE user_session_tokens
-                    SET isActive = 0
-                    WHERE userID = :id AND isActive = 1";
+            $sql = "UPDATE Bookings
+                    SET bookingStatus = 'cancelled',
+                    cancellationReason = 'Guest researcher account expired'
+                    WHERE userID = :id
+                    AND bookingStatus IN ('pending', 'confirmed')
+                    AND startTime > NOW()";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':id' => $userID]);
 
-            $this->db->commit();
-            return true;
-
-        } catch (PDOException $e) {
-            $this->db->rollBack();
-            return false;
-        }
-    }
-
-
-
-    public function updateGuestResearcher($userID, $userName, $userPassword, $institution, $expirationDate, $sponsorPiID, $clearanceLevel)
-    {
-        try {
-            $this->db->beginTransaction();
-
-
-            $this->updateUser(
-                $userID,
-                $userName,
-                $userPassword,
-                'guest_researcher',
-                'active',
-                $clearanceLevel
-            );
-
-
-            $sql = "UPDATE guest_researchers SET
-                        institution = :institution,
-                        expirationDate = :expirationDate,
-                        sponsorPiID = :sponsorPiID
-                    WHERE userID = :id";
+            $sql = "INSERT INTO SystemAuditLogs (userID, actionType, tableAffected, recordID, description)
+                    VALUES (:id, 'guest_expired', 'GuestResearchers', :recordID, 'Guest researcher credentials expired')";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
-                ':id'              => $userID,
-                ':institution'     => $institution,
-                ':expirationDate'  => $expirationDate,
-                ':sponsorPiID'     => $sponsorPiID
+                ':id' => $userID,
+                ':recordID' => $userID
             ]);
 
             $this->db->commit();
@@ -168,15 +132,69 @@ class GuestResearcher extends Researcher {
     }
 
 
-    public function searchGuestResearchers($keyword)
-    {
-        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPiID
-                FROM users u
-                JOIN guest_researchers gr ON u.userID = gr.userID
-                WHERE (u.userName LIKE :keyword OR gr.institution LIKE :keyword)
-                ORDER BY u.userID DESC";
+    public function updateGuestResearcher( $userID, $userName, $userPassword, $institution, $expirationDate, $sponsorPIID,  $clearanceLevel, $maxBookingHoursPerWeek = 20) {
+        try {
+            $this->db->beginTransaction();
+
+            $this->updateUser(
+                $userID,
+                $userName,
+                $userPassword,
+                'guest_researcher',
+                'active',
+                $clearanceLevel,
+                true,                    
+                $maxBookingHoursPerWeek  
+            );
+
+            $sql = "UPDATE GuestResearchers SET
+                    institution = :institution,
+                    expirationDate = :expirationDate,
+                    sponsorPIID = :sponsorPIID
+                    WHERE userID = :id";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':id'    => $userID,
+                ':institution'  => $institution,
+                ':expirationDate' => $expirationDate,
+                ':sponsorPIID'  => $sponsorPIID
+            ]);
+
+            $this->db->commit();
+            return true;
+
+        } catch (PDOException $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+
+
+    public function extendExpiration($userID, $newExpirationDate){
+        $sql = "UPDATE GuestResearchers SET expirationDate = :expDate WHERE userID = :id";
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':keyword' => '%' . $keyword . '%']);
+        return $stmt->execute([
+            ':id'=> $userID,
+            ':expDate' => $newExpirationDate
+        ]);
+    }
+
+ 
+    public function getGuestsExpiringSoon($days = 17)
+    {
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+                       sponsor.userName AS sponsorName
+                FROM Users u
+                JOIN GuestResearchers gr ON u.userID = gr.userID
+                LEFT JOIN Users sponsor ON gr.sponsorPIID = sponsor.userID
+                WHERE u.userStatus = 'active'
+                  AND gr.expirationDate BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL :days DAY)
+                ORDER BY gr.expirationDate ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':days' => $days]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
 }
