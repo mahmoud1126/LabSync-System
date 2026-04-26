@@ -27,6 +27,7 @@ abstract class User {
             ':isExternal' => $isExternal ? 1 : 0,  
             ':maxBookingHours' => $maxBookingHoursPerWeek // NEW: maps to maxBookingHoursPerWeek column
         ]);
+        return $this->db->lastInsertId();
     }
 
     public function getUserById($userID) {
