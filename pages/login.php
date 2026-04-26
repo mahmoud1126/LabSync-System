@@ -1,7 +1,24 @@
+
 <?php
+session_start();
 
 $error_message = '';
 $success_message = '';
+
+$host = '127.0.0.1'; 
+$db   = 'my_project_db'; 
+$db_user = 'root'; 
+$db_pass = ''; 
+
+try {
+    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $db_user, $db_pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+} catch (\PDOException $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -14,25 +31,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_message = "Please enter both username and password.";
     } else {
 
-        $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ?');
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE userName = ?');
         $stmt->execute([$username]);
         $user = $stmt->fetch();
         
-        if ($user && password_verify($password, $user['password'])) {
-            switch ($user['role']) {
-                case 'PI':
-                    header("Location: FacultyPI.php");
+        if ($user && password_verify($password, $user['userPassword'])) {
+            $_SESSION['userID'] = $user['userID'];
+            $_SESSION['userName'] = $user['userName'];
+            $_SESSION['userType'] = $user['userType'];
+
+            switch ($user['userType']) {
+                case 'faculty_pi':
+                    header("Location: FacultyPi.php");
                     exit;
                     
-                case 'lab manager':
+                case 'lab_manager':
                     header("Location: LabManager.php");
                     exit;
                     
-                case 'researchers':
+                case 'researcher':
                     header("Location: Researcher.php");
                     exit;
                     
-                case 'guest researchers':
+                case 'guest_researcher':
                     header("Location: GuestResearcher.php");
                     exit;
                     
