@@ -6,6 +6,10 @@ class FacultyPI extends User {
 
     private $labGroupID;
 
+    public function __construct() {
+        parent::__construct();
+    }
+
     public function getRole() {
         return 'faculty_pi';
     }
@@ -40,16 +44,19 @@ class FacultyPI extends User {
     }
 
     public function setSpendingLimit($researcherID, $grantID, $limit): void {
-        $sql = "UPDATE GrantUserAccess 
-                SET billingPercentage = :limit
-                WHERE grantID = :grant_id
-                AND userID    = :researcher_id";
+        $sql = "UPDATE GrantUserAccess gua
+                JOIN Grants g ON gua.grantID = g.grantID
+                SET gua.billingPercentage = :limit
+                WHERE gua.grantID = :grant_id
+                AND gua.userID    = :researcher_id
+                AND g.piID        = :pi_id";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
-            ':limit'         => $limit,
+            ':limit'         => (float)$limit,
             ':grant_id'      => $grantID,
-            ':researcher_id' => $researcherID
+            ':researcher_id' => $researcherID,
+            ':pi_id'         => $_SESSION['user_id']
         ]);
     }
 
@@ -67,7 +74,8 @@ class FacultyPI extends User {
     public function getPendingTransactions(): array {
         $sql = "SELECT gt.*, 
                        u.userName,
-                       e.equipmentName
+                       e.equipmentName,
+                       g.grantName
                 FROM GrantTransactions gt
                 JOIN Users u ON gt.userID = u.userID
                 JOIN Grants g ON gt.grantID = g.grantID
