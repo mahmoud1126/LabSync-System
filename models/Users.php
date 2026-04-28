@@ -126,7 +126,7 @@ abstract class User {
     public function canBookHours($userID, $requestedHours) {
         $data = $this->getCurrentWeeklyBookedHours($userID);
         if (!$data) return false;
-        return ($data['currentWeeklyBookedHours'] + $requestedHours) <= $data['maxBookingHoursPerWeek'];
+        return ((float)$data['currentWeeklyBookedHours'] + (float)$requestedHours) <= (float)$data['maxBookingHoursPerWeek'];
     }
 
     public function acknowledgeSafetyBriefing($userID) {
@@ -168,6 +168,7 @@ abstract class User {
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($user && password_verify($userPassword, $user['userPassword'])) {
+            unset($user['userPassword']);
             return $user;
         }
         return false;

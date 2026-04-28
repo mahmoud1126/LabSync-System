@@ -8,7 +8,7 @@ class Database
     private $host = "localhost";
     private $username = "root";
     private $password = "123456";
-    private $dbname = "LabSyncDB";
+    private $dbname = "labsync";
 
 
     // Private constructor → Singleton

@@ -8,7 +8,7 @@ CREATE TABLE Users (
 
     userPassword VARCHAR(255) NOT NULL, 
 
-    userType ENUM('researcher', 'guest_researcher', 'faculty_pi', 'lab_manager', 'admin') NOT NULL,
+    userType ENUM('researcher', 'guest_researcher', 'faculty_pi', 'lab_manager') NOT NULL,
 
     userStatus ENUM('active', 'suspended', 'inactive') DEFAULT 'active',
 
@@ -415,6 +415,28 @@ CREATE TABLE SafetyBriefingAcknowledgements (
         ON DELETE CASCADE,
 
     UNIQUE KEY unique_user_briefing (userID, briefingID)
+
+) ENGINE=InnoDB;
+
+
+
+CREATE TABLE HazmatWarnings (
+
+    warningID INT PRIMARY KEY AUTO_INCREMENT,
+
+    equipmentID INT NOT NULL,
+
+    hazardType VARCHAR(100) NOT NULL,
+
+    warningMessage TEXT NOT NULL,
+
+    disposalInstructions TEXT NOT NULL,
+
+    CONSTRAINT fk_hazmat_equipment
+
+        FOREIGN KEY (equipmentID) REFERENCES Equipment(equipmentID)
+
+        ON DELETE CASCADE
 
 ) ENGINE=InnoDB;
 
