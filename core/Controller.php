@@ -156,27 +156,20 @@ class BaseController
     }
 
 
-    // protected function logAction($actionType, $description = '', $targetID = null, $targetType = null)
-    // {
-        
-    //     $db = Database::getInstance()->getConnection();
-
-    //     $sql = "INSERT INTO SystemAuditLogs 
-    //             (userID, actionType, tableAffected,description, targetID, targetType, ipAddress, createdAt)
-    //             VALUES 
-    //             (:userID, :actionType, :description, :targetID, :targetType, :ipAddress, NOW())";
-
-    //     $stmt = $db->prepare($sql);
-    //     $stmt->execute([
-    //         ':userID'  => $this->getCurrentUserID(),
-    //         ':actionType' => $actionType,
-    //         ':description' => $description,
-    //         ':targetID' => $targetID,
-    //         ':targetType' => $targetType,
-    //         ':ipAddress' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
-    //     ]);
-
-    // }
+   protected function logAction($actionType, $tableAffected, $description = '', $recordID = null, $oldValue = null, $newValue = null)
+{
+    require_once __DIR__ . '/../models/AuditLog.php';
+    $auditLog = new AuditLog();
+    $auditLog->log(
+        $this->getCurrentUserID(),
+        $actionType,
+        $tableAffected,
+        $recordID,
+        $oldValue,
+        $newValue,
+        $description
+    );
+}
 
 
 
