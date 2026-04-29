@@ -5,15 +5,19 @@ class Database
     private static $instance = null;
     private $pdo;
 
-    private $host = $_ENV['DB_HOST'];
-    private $username = $_ENV['DB_USER'];
-    private $password = $_ENV['DB_PASS'];
-    private $dbname = $_ENV['DB_NAME'];
+    private $host;
+    private $username;
+    private $password;
+    private $dbname;
 
 
     // Private constructor → Singleton
     private function __construct()
     {
+        $this->host = $_ENV['DB_HOST'];
+        $this->username = $_ENV['DB_USER'];
+        $this->password = $_ENV['DB_PASS'];
+        $this->dbname = $_ENV['DB_NAME'];
         try {
             $this->pdo = new PDO(
                 "mysql:host={$this->host};dbname={$this->dbname};charset=utf8",

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 abstract class User {
 
@@ -22,9 +22,9 @@ abstract class User {
             ':name' => $userName,
             ':password'  => password_hash($userPassword, PASSWORD_DEFAULT),
             ':type'  => $userType,
-            ':status'  => $userStatus,        
+            ':status'  => $userStatus,
             ':clearance'  => $clearanceLevel,
-            ':isExternal' => $isExternal ? 1 : 0,  
+            ':isExternal' => $isExternal ? 1 : 0,
             ':maxBookingHours' => $maxBookingHoursPerWeek // NEW: maps to maxBookingHoursPerWeek column
         ]);
         return $this->db->lastInsertId();
@@ -53,7 +53,7 @@ abstract class User {
     }
 
     public function updateUser($userID, $userName, $userPassword, $userType, $userStatus, $clearanceLevel, $isExternal = false, $maxBookingHoursPerWeek = 20) {
-        $sql = "UPDATE Users 
+        $sql = "UPDATE Users
                 SET userName = :name,
                     userPassword = :password,
                     userType = :type,
@@ -71,8 +71,8 @@ abstract class User {
             ':type' => $userType,
             ':status' => $userStatus,
             ':clearance' => $clearanceLevel,
-            ':isExternal' => $isExternal ? 1 : 0,  
-            ':maxBookingHours' => $maxBookingHoursPerWeek 
+            ':isExternal' => $isExternal ? 1 : 0,
+            ':maxBookingHours' => $maxBookingHoursPerWeek
         ]);
     }
 
@@ -130,8 +130,8 @@ abstract class User {
     }
 
     public function acknowledgeSafetyBriefing($userID) {
-        $sql = "UPDATE Users 
-                SET safetyBriefingAcknowledged = 1, safetyBriefingAcknowledgedAt = NOW() 
+        $sql = "UPDATE Users
+                SET safetyBriefingAcknowledged = 1, safetyBriefingAcknowledgedAt = NOW()
                 WHERE userID = :id";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':id' => $userID]);
