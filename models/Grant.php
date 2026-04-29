@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class Grant {
-    
+
     protected $db;
 
     public function __construct()

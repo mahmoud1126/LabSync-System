@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class Booking {
 
@@ -26,11 +26,11 @@ class Booking {
             ':grantID'=> $grantID,
             ':labManagerID'=> $labManagerID
         ]);
-        
+
         return $this->db->lastInsertId();
     }
 
-  
+
 
     public function getBookingById($bookingID) {
         $sql = "SELECT * FROM Bookings WHERE bookingID = :id";
@@ -70,10 +70,10 @@ class Booking {
 
 
     public function updateBookingStatus($bookingID, $status, $labManagerID = null) {
-        $sql = "UPDATE Bookings 
-                SET bookingStatus = :status, labManagerID = :managerID 
+        $sql = "UPDATE Bookings
+                SET bookingStatus = :status, labManagerID = :managerID
                 WHERE bookingID = :id";
-        
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':status'=> $status,
@@ -83,10 +83,10 @@ class Booking {
     }
 
     public function cancelBooking($bookingID, $reason) {
-        $sql = "UPDATE Bookings 
-                SET bookingStatus = 'cancelled', cancellationReason = :reason 
+        $sql = "UPDATE Bookings
+                SET bookingStatus = 'cancelled', cancellationReason = :reason
                 WHERE bookingID = :id";
-                
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':reason'=> $reason,
@@ -95,10 +95,10 @@ class Booking {
     }
 
     public function updateBookingTimes($bookingID, $startTime, $endTime) {
-        $sql = "UPDATE Bookings 
-                SET startTime = :startTime, endTime = :endTime 
+        $sql = "UPDATE Bookings
+                SET startTime = :startTime, endTime = :endTime
                 WHERE bookingID = :id";
-                
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':startTime'=> $startTime,
@@ -108,22 +108,22 @@ class Booking {
     }
 
     public function hasTimeConflict($equipmentID, $requestedStartTime, $requestedEndTime) {
-        $sql = "SELECT COUNT(*) FROM Bookings 
-                WHERE equipmentID = :equipmentID 
+        $sql = "SELECT COUNT(*) FROM Bookings
+                WHERE equipmentID = :equipmentID
                 AND bookingStatus IN ('confirmed', 'pending')
                 AND (
                     (startTime < :endTime AND endTime > :startTime)
                 )";
-                
+
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
             ':equipmentID' => $equipmentID,
             ':startTime'   => $requestedStartTime,
             ':endTime'     => $requestedEndTime
         ]);
-        
+
         $count = $stmt->fetchColumn();
-        return $count > 0; 
+        return $count > 0;
     }
 }
 ?>

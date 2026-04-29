@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Database.php';
 
 class SafetyBriefing {
 
@@ -19,7 +19,7 @@ class SafetyBriefing {
             ':equipmentID'=> $equipmentID,
             ':content'=> $briefingContent
         ]);
-        
+
         return $this->db->lastInsertId();
     }
 
@@ -44,11 +44,11 @@ class SafetyBriefing {
     }
 
     public function updateBriefing($briefingID, $equipmentID, $briefingContent) {
-        $sql = "UPDATE SafetyBriefings 
-                SET equipmentID = :equipmentID, 
-                    briefingContent = :content 
+        $sql = "UPDATE SafetyBriefings
+                SET equipmentID = :equipmentID,
+                    briefingContent = :content
                 WHERE briefingID = :id";
-                
+
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             ':equipmentID'=> $equipmentID,

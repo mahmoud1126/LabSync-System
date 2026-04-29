@@ -21,6 +21,6 @@ services:
         MYSQL_DATABASE: labsync
     volumes:
       - ./mysql_data:/var/lib/mysql
-      - ./sql/LabSync_Local.session.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "3306:3306"

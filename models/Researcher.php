@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/User.php';
+require_once __DIR__ . '/Users.php';
 
 class Researcher extends User
 {
@@ -21,8 +21,8 @@ class Researcher extends User
             'researcher',
             'active',
             $clearanceLevel,
-            $isExternal,            
-            $maxBookingHoursPerWeek 
+            $isExternal,
+            $maxBookingHoursPerWeek
         );
     }
 
@@ -88,8 +88,8 @@ class Researcher extends User
             'researcher',
             'active',
             $clearanceLevel,
-            $isExternal,           
-            $maxBookingHoursPerWeek 
+            $isExternal,
+            $maxBookingHoursPerWeek
         );
     }
 

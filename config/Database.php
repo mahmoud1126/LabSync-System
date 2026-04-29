@@ -5,10 +5,10 @@ class Database
     private static $instance = null;
     private $pdo;
 
-    private $host = "localhost";
-    private $username = "root";
-    private $password = "123456";
-    private $dbname = "labsync";
+    private $host = $_ENV['DB_HOST'];
+    private $username = $_ENV['DB_USER'];
+    private $password = $_ENV['DB_PASS'];
+    private $dbname = $_ENV['DB_NAME'];
 
 
     // Private constructor → Singleton

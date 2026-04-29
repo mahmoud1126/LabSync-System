@@ -10,7 +10,7 @@ class AuditLog {
     }
 
     public function log($userID, $actionType, $tableAffected, $recordID , $oldValue = null, $newValue = null, $description = ''){
-    
+
     $sql="INSERT INTO SystemAuditLogs (userID, actionType, tableAffected, recordID, oldValue, newValue, ipAddress, description, createdAt)
           VALUES (:userID, :actionType, :tableAffected, :recordID, :oldValue, :newValue, :ipAddress, :description, NOW())";
 
@@ -56,8 +56,8 @@ class AuditLog {
 
 
     public function getLogsByUserID($userID){
-        $sql = "SELECT * FROM SystemAuditLogs 
-                WHERE userID = :userID 
+        $sql = "SELECT * FROM SystemAuditLogs
+                WHERE userID = :userID
                 ORDER BY createdAt DESC";
 
         $stmt = $this->db->prepare($sql);

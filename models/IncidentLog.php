@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '../config/database.php' ;
+require_once __DIR__ . '/../config/Database.php' ;
 
 class IncidentLog {
 
     private $db ;
-    
+
     public function __construct (){
         $this->db = Database::getInstance()->getConnection();
     }
@@ -19,7 +19,7 @@ class IncidentLog {
         'userID' => $userID,
         'equipmentID' => $equipmentID,
         'reportedByID'=> $reportedByID,
-        'incidentType' => $incidentType, 
+        'incidentType' => $incidentType,
         'description'=> $description,
         'severity'=> $severity,
         'time'=> $timeOfIncident,
@@ -27,7 +27,7 @@ class IncidentLog {
     }
 
     public function getIncidentByID ($incidentID){
-        $sql = "SELECT ir.*, 
+        $sql = "SELECT ir.*,
                 u.userName AS involvedUserName, reporter.userName AS reporterName, e.equipmentName
                 FROM IncidentReports ir
                 LEFT JOIN Users u ON ir.userID = u.userID
@@ -40,7 +40,7 @@ class IncidentLog {
     }
 
     public function getAllIncidents(){
-        $sql = "SELECT ir.*, 
+        $sql = "SELECT ir.*,
                 u.userName AS involvedUserName, reporter.userName AS reporterName, e.equipmentName
                 FROM IncidentReports ir
                 LEFT JOIN Users u ON ir.userID = u.userID
@@ -51,12 +51,12 @@ class IncidentLog {
         $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }    
+    }
 
 
     public function getIncidentsByUserID($userID)
     {
-        $sql = "SELECT ir.*, 
+        $sql = "SELECT ir.*,
                 e.equipmentName, reporter.userName AS reporterName
                 FROM IncidentReports ir
                 LEFT JOIN Equipment e ON ir.equipmentID = e.equipmentID
