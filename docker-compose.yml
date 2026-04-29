@@ -1,0 +1,26 @@
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+    environment:
+        DB_HOST: mysql
+        DB_PORT: 3306
+        DB_NAME: labsync
+        DB_USER: root
+        DB_PASS: 123456
+
+  mysql:
+    image: mysql:8.0
+    environment:
+        MYSQL_ROOT_PASSWORD: 123456
+        MYSQL_DATABASE: labsync
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      - ./sql/LabSync_Local.session.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
