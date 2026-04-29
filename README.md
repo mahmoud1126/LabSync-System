@@ -26,10 +26,11 @@ Before launching the project ensure that you host machine doesn't require
 those ports
 - 80 for apache
 - 3306 for mysql
+- 9988 for phpmyadmin
 you can check active services at those ports with
 
 ```sh
-ss -tulpn | grep -E ':80|:3306'
+sudo ss -tulpn | grep -E ':(80|3306|9988)\b'
 ```
 
 ### Permission Denied
