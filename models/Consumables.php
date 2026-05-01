@@ -54,8 +54,8 @@ class Consumables
         return $stmt->execute([
             ':sessionID'  => $sessionID,
             ':consumableID' => $consumableID,
-            ':qty'     => $quantity,
-            ':cost'   => $totalCost
+            ':qty' => $quantity,
+            ':cost' => $totalCost
         ]);
     }
 }

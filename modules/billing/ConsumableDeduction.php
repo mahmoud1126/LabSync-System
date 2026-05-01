@@ -7,12 +7,12 @@ require_once __DIR__ . '/../../models/Equipment.php';
 class ConsumableDeduction
 {
     private Consumables $consumableModel;
-    private Equipment   $equipmentModel;
+    private Equipment $equipmentModel;
 
     public function __construct()
     {
         $this->consumableModel = new Consumables();
-        $this->equipmentModel  = new Equipment();
+        $this->equipmentModel = new Equipment();
     }
 
     public function processDeduction(int $sessionID, int $equipmentID, array $itemsUsed): array
@@ -21,7 +21,7 @@ class ConsumableDeduction
             return [
                 'success' => false,
                 'message' => 'No consumable items provided.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -30,12 +30,12 @@ class ConsumableDeduction
             return [
                 'success' => false,
                 'message' => 'Equipment not found.',
-                'data'    => []
+                'data' => []
             ];
         }
 
-        $breakdown      = [];
-        $totalCost      = 0.0; 
+        $breakdown = [];
+        $totalCost = 0.0; 
 
         foreach ($itemsUsed as $index => $item) {
 
@@ -43,18 +43,18 @@ class ConsumableDeduction
                 return [
                     'success' => false,
                     'message' => "Item at index {$index} is missing consumableID or quantity.",
-                    'data'    => []
+                    'data' => []
                 ];
             }
 
             $consumableID = (int)$item['consumableID'];
-            $quantity     = (int)$item['quantity'];
+            $quantity = (int)$item['quantity'];
 
             if ($quantity <= 0) {
                 return [
                     'success' => false,
                     'message' => "Quantity for consumable ID {$consumableID} must be greater than zero.",
-                    'data'    => []
+                    'data'  => []
                 ];
             }
 
@@ -63,7 +63,7 @@ class ConsumableDeduction
                 return [
                     'success' => false,
                     'message' => "Consumable ID {$consumableID} not found.",
-                    'data'    => []
+                    'data' => []
                 ];
             }
 
@@ -71,7 +71,7 @@ class ConsumableDeduction
                 return [
                     'success' => false,
                     'message' => "Consumable '{$consumable['consumableName']}' does not belong to this equipment.",
-                    'data'    => []
+                    'data' => []
                 ];
             }
 
@@ -80,19 +80,19 @@ class ConsumableDeduction
                     'success' => false,
                     'message' => "Insufficient stock for '{$consumable['consumableName']}'. "
                                . "Available: {$consumable['stockQuantity']}, Requested: {$quantity}.",
-                    'data'    => []
+                    'data' => []
                 ];
             }
 
-            $itemCost   = round((float)$consumable['unitCost'] * $quantity, 2);
+            $itemCost = round((float)$consumable['unitCost'] * $quantity, 2);
             $totalCost += $itemCost;
 
             $breakdown[] = [
                 'consumableID'   => $consumableID,
                 'consumableName' => $consumable['consumableName'],
-                'unitCost'       => (float)$consumable['unitCost'],
-                'quantity'       => $quantity,
-                'itemCost'       => $itemCost,
+                'unitCost'  => (float)$consumable['unitCost'],
+                'quantity'  => $quantity,
+                'itemCost' => $itemCost,
             ];
         }
 
@@ -122,10 +122,10 @@ class ConsumableDeduction
         return [
             'success' => true,
             'message' => 'Consumables deducted and recorded successfully.',
-            'data'    => [
-                'sessionID'        => $sessionID,
-                'equipmentID'      => $equipmentID,
-                'breakdown'        => $breakdown,
+            'data' => [
+                'sessionID' => $sessionID,
+                'equipmentID' => $equipmentID,
+                'breakdown'  => $breakdown,
                 'totalConsumableCost' => round($totalCost, 2),
             ]
         ];

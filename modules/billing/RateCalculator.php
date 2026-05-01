@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../models/Grant.php';
 class RateCalculator
 {
     private Equipment $equipmentModel;
-    private User      $userModel;
+    private User $userModel;
 
     public function __construct()
     {
@@ -27,7 +27,7 @@ class RateCalculator
             return [
                 'success' => false,
                 'message' => 'Usage hours must be greater than zero.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -36,7 +36,7 @@ class RateCalculator
             return [
                 'success' => false,
                 'message' => 'Equipment not found.',
-                'data'    => []
+                'data'=> []
             ];
         }
 
@@ -45,7 +45,7 @@ class RateCalculator
             return [
                 'success' => false,
                 'message' => 'User not found.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -56,7 +56,7 @@ class RateCalculator
 
         $billableHours = $actualHours + $bufferHours;
 
-        $isExternal     = (bool)$user['isExternal'];
+        $isExternal = (bool)$user['isExternal'];
         $rateMultiplier = $isExternal ? 1.50 : 1.00;
 
         $hourlyRate = (float)$equipment['hourlyRateExternal'];
@@ -66,16 +66,16 @@ class RateCalculator
         return [
             'success' => true,
             'message' => 'Base rate calculated successfully.',
-            'data'    => [
-                'equipmentID'     => $equipmentID,
-                'userID'          => $userID,
-                'actualHours'     => $actualHours,
-                'bufferHours'     => round($bufferHours, 4),
-                'billableHours'   => round($billableHours, 4),
-                'hourlyRate'      => $hourlyRate,
-                'isExternal'      => $isExternal,
+            'data'  => [
+                'equipmentID' => $equipmentID,
+                'userID' => $userID,
+                'actualHours'   => $actualHours,
+                'bufferHours'  => round($bufferHours, 4),
+                'billableHours' => round($billableHours, 4),
+                'hourlyRate' => $hourlyRate,
+                'isExternal'  => $isExternal,
                 'rateMultiplier'  => $rateMultiplier,
-                'baseCost'        => $baseCost,
+                'baseCost' => $baseCost,
             ]
         ];
     }

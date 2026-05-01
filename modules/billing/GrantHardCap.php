@@ -7,15 +7,15 @@ require_once __DIR__ . '/../../models/AuditLog.php';
 
 class GrantHardCap
 {
-    private Grant     $grantModel;
+    private Grant  $grantModel;
     private GrantTransaction $transactionModel;
-    private AuditLog     $auditLog;
+    private AuditLog $auditLog;
 
     public function __construct()
     {
-        $this->grantModel       = new Grant();
+        $this->grantModel = new Grant();
         $this->transactionModel = new GrantTransaction();
-        $this->auditLog         = new AuditLog();
+        $this->auditLog = new AuditLog();
     }
 
     public function enforce(
@@ -24,7 +24,7 @@ class GrantHardCap
         float $totalCost,
         int   $sessionID,
         int   $bookingID,
-        float $baseCost       = 0.0,
+        float $baseCost  = 0.0,
         float $consumableCost = 0.0,
         float $overheadCost   = 0.0
     ): array {
@@ -33,7 +33,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => 'Total cost must be greater than zero.',
-                'data'    => []
+                'data'  => []
             ];
         }
 
@@ -42,7 +42,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => 'Grant not found.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -50,7 +50,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => "Grant '{$grant['grantName']}' is not active (status: {$grant['grantStatus']}).",
-                'data'    => []
+                'data'  => []
             ];
         }
 
@@ -58,7 +58,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => "Grant '{$grant['grantName']}' has expired on {$grant['expirationDate']}.",
-                'data'    => []
+                'data'  => []
             ];
         }
 
@@ -67,7 +67,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => 'User does not have access to this grant.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -80,10 +80,10 @@ class GrantHardCap
                            . "Required: \${$totalCost}, Available: \${$currentBalance}. "
                            . "Transaction blocked by hard cap.",
                 'data'    => [
-                    'grantID'    => $grantID,
-                    'required'       => $totalCost,
-                    'available'    => $currentBalance,
-                    'shortfall'     => round($totalCost - $currentBalance, 2),
+                    'grantID' => $grantID,
+                    'required' => $totalCost,
+                    'available' => $currentBalance,
+                    'shortfall' => round($totalCost - $currentBalance, 2),
                 ]
             ];
         }
@@ -94,7 +94,7 @@ class GrantHardCap
             return [
                 'success' => false,
                 'message' => 'Failed to deduct from grant balance. The grant may have been modified concurrently. Please retry.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -130,14 +130,14 @@ class GrantHardCap
         return [
             'success' => true,
             'message' => "Amount of \${$totalCost} successfully deducted from grant '{$grant['grantName']}'.",
-            'data'    => [
-                'grantID'      => $grantID,
+            'data'  => [
+                'grantID' => $grantID,
                 'grantName'   => $grant['grantName'],
                 'amountDeducted' => $totalCost,
                 'balanceBefore'  => $currentBalance,
                 'balanceAfter'   => $newBalance,
-                'sessionID'    => $sessionID,
-                'bookingID'     => $bookingID,
+                'sessionID'  => $sessionID,
+                'bookingID' => $bookingID,
             ]
         ];
     }

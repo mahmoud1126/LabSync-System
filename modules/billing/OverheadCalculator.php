@@ -19,7 +19,7 @@ class OverheadCalculator
             return [
                 'success' => false,
                 'message' => 'Base cost cannot be negative.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -28,7 +28,7 @@ class OverheadCalculator
             return [
                 'success' => false,
                 'message' => 'Equipment not found.',
-                'data'    => []
+                'data' => []
             ];
         }
 
@@ -42,10 +42,10 @@ class OverheadCalculator
             'success' => true,
             'message' => 'Overhead applied successfully.',
             'data'   => [
-                'equipmentID'     => $equipmentID,
-                'baseCost'    => $baseCost,
+                'equipmentID'  => $equipmentID,
+                'baseCost' => $baseCost,
                 'overheadPercentage'=> $overheadPercentage,
-                'overheadCost'    => $overheadCost, 
+                'overheadCost' => $overheadCost, 
                 'totalWithOverhead' => $totalWithOverhead,
             ]
         ];
