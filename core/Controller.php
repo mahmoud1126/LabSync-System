@@ -4,34 +4,28 @@
 class BaseController
 {
     
-    protected function view($viewPath, $data = [])
-    {
-
+protected function view($viewPath, $data = []){
     $data['flash'] = $this->getFlash();
 
-        if ($this->requireLogin()) {
-            $data['currentUser'] = $this->getCurrentUser();
-            $data['currentRole'] = $this->getCurrentUserRole();
-        }
-
-
-        extract($data);
-
-        $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
-
-        if (!file_exists($viewFile)) {
-            die(
-                "<div style='font-family:Arial; padding:20px;'>"
-                . "<h2>⚠️ LabSync Error: View Not Found</h2>"
-                . "<p>Looking for: <code>views/{$viewPath}.php</code></p>"
-                . "<p><strong>Fix:</strong> Create this file in the views/ folder.</p>"
-                . "</div>"
-            );
-        }
-
-        require_once $viewFile;
+    if (isset($_SESSION['user'])) {
+        $data['currentUser'] = $this->getCurrentUser();
+        $data['currentRole'] = $this->getCurrentUserRole();
+    }
+    else {
+        $data['currentUser'] = null;
+        $data['currentRole'] = null;
     }
 
+    extract($data);
+
+    $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
+
+    if (!file_exists($viewFile)) {
+        die("⚠️ LabSync Error: View Not Found: views/{$viewPath}.php");
+    }
+
+    require_once $viewFile;
+}
 
     protected function redirect($url)
     {
@@ -48,12 +42,12 @@ class BaseController
     }
 
 
-    protected function requireLogin()
-    {
+    protected function requireLogin(): bool{
         if (!isset($_SESSION['user'])) {
             $this->setFlash('error', 'Please log in to access this page.');
             $this->redirect('/login');
         }
+        return true;
     }
 
     protected function getCurrentUser(){
@@ -70,15 +64,12 @@ class BaseController
     }
 
 
-    protected function requireRole($allowedRoles)
-    {
-
+    protected function requireRole($allowedRoles){
         $this->requireLogin();
 
         if (!is_array($allowedRoles)) {
             $allowedRoles = [$allowedRoles];
         }
-
 
         $currentRole = $this->getCurrentUserRole();
 
@@ -92,10 +83,15 @@ class BaseController
                 $requiredRoles = $allowedRoles;
                 require_once $errorPage;
             } 
+            else {
+                echo "<h1>403 Forbidden</h1>";
+                echo "<p>Access Denied: Your role does not have permission for this action.</p>";
+                echo "<p>Required roles: " . implode(', ', $allowedRoles) . "</p>";
+                echo "<p><a href='/LabSync-System/dashboard'>← Back to Dashboard</a></p>";
+            }
             exit;
         }
     }
-
 
     protected function hasRole($roles)
     {
@@ -129,29 +125,37 @@ class BaseController
         }
     }
 
-    protected function checkGuestExpiry()
-    {
-
-        if (!$this->requireLogin()) {
-            return;
-        }
-
+    protected function checkGuestExpiry(){
+        $this->requireLogin();
         $user = $this->getCurrentUser();
 
-        if ($user['userType'] !== 'guest') {
+        if($user['userType'] !== 'guest_researcher') {
             return;
         }
 
-        if (isset($user['expirationDate'])) {
-            $expirationDate = strtotime($user['expirationDate']);
-            $now = time();
+        require_once __DIR__ . '/../models/GuestResearcher.php';
+        $guestModel = new GuestResearcher();
+        $guest = $guestModel->getGuestResearcherById($user['userID']);
 
-            if ($now > $expirationDate) {
-                session_destroy();
-                session_start(); 
-                $this->setFlash('error', 'Your guest access has expired. Please contact the Lab Manager.');
-                $this->redirect('/login');
+        if (!$guest) {
+            session_destroy();
+            $this->redirect('/login');
+            return;
+        }
+
+      $expired = strtotime($guest['expirationDate']) <= time();
+        $inactive = $guest['userStatus'] !== 'active';
+
+        if ($expired || $inactive) {
+            if ($expired && $guest['userStatus'] === 'active') {
+                $guestModel->expireGuestCredentials((int) $user['userID']);
             }
+
+            session_destroy();
+            session_start(); 
+            $this->setFlash('error', 'Your guest access has expired. Please contact the Lab Manager.');
+            $this->redirect('/login');
+            
         }
     }
 
