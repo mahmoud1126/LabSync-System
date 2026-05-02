@@ -19,7 +19,7 @@ class AuthController extends BaseController
         if ($user) {
             $_SESSION['user'] = $user;
             $this->setFlash('success', 'Welcome, ' . $user['userName']);
-            $this->redirect('/incidents');   // straight to incidents for testing
+            $this->redirect('/incidents'); 
         } else {
             $this->setFlash('error', 'Invalid credentials.');
             $this->redirect('/login');
