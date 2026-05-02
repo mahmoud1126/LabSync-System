@@ -1,226 +1,223 @@
-/* ===== تغيير ألوان Bootstrap بس ===== */
+/* ==========================================================================
+   LabSync — Custom Styling on top of Bootswatch Cosmo
+   ========================================================================== */
 
-/* الأزرق */
-.btn-primary {
-    background-color: #0EA5E9;
-    border-color: #0EA5E9;
-}
-.btn-primary:hover {
-    background-color: #0284C7;
-    border-color: #0284C7;
-}
+/* Load Cosmo theme via CDN  */
+@import url("https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/cosmo/bootstrap.min.css");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
 
-/* الأخضر */
-.btn-success {
-    background-color: #10B981;
-    border-color: #10B981;
-}
-.btn-success:hover {
-    background-color: #059669;
-    border-color: #059669;
+/* ---------- Color tokens (Cosmo's palette) ---------- */
+:root {
+    --ls-primary: #2780E3;
+    --ls-success: #3FB618;
+    --ls-info:    #9954BB;
+    --ls-warning: #FF7518;
+    --ls-danger:  #FF0039;
+    --ls-dark:    #373A3C;
+    --ls-light:   #F8F9FA;
+    --ls-border:  #E9ECEF;
 }
 
-/* الأحمر */
-.btn-danger {
-    background-color: #F43F5E;
-    border-color: #F43F5E;
-}
-.btn-danger:hover {
-    background-color: #E11D48;
-    border-color: #E11D48;
-}
-
-/* البرتقالي */
-.btn-warning {
-    background-color: #F97316;
-    border-color: #F97316;
-    color: white;
-}
-.btn-warning:hover {
-    background-color: #EA580C;
-    border-color: #EA580C;
-    color: white;
-}
-
-/* البنفسجي */
-.btn-info {
-    background-color: #8B5CF6;
-    border-color: #8B5CF6;
-    color: white;
-}
-.btn-info:hover {
-    background-color: #7C3AED;
-    border-color: #7C3AED;
-    color: white;
-}
-
-/* ===== الخلفيات ===== */
-.bg-primary { background-color: #0EA5E9 !important; }
-.bg-success { background-color: #10B981 !important; }
-.bg-danger  { background-color: #F43F5E !important; }
-.bg-warning { background-color: #F97316 !important; }
-.bg-info    { background-color: #8B5CF6 !important; }
-
-/* ===== ألوان النصوص ===== */
-.text-primary { color: #0EA5E9 !important; }
-.text-success { color: #10B981 !important; }
-.text-danger  { color: #F43F5E !important; }
-.text-warning { color: #F97316 !important; }
-
-/* ===== الـ alerts ===== */
-.alert-primary {
-    background-color: #E0F2FE;
-    border-color: #BAE6FD;
-    color: #0284C7;
-}
-.alert-success {
-    background-color: #D1FAE5;
-    border-color: #A7F3D0;
-    color: #059669;
-}
-.alert-danger {
-    background-color: #FFF1F2;
-    border-color: #FECDD3;
-    color: #E11D48;
-}
-.alert-warning {
-    background-color: #FFF7ED;
-    border-color: #FDBA74;
-    color: #EA580C;
-}
-
-/* ===== الـ forms ===== */
-.form-control:focus {
-    border-color: #0EA5E9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
-}
-
-/* ===== الخلفية العامة ===== */
+/* ---------- Body & layout ---------- */
 body {
-    background: #FAFBFC;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-/* ===== Logo ===== */
+main {
+    flex: 1;
+    padding: 30px 0;
+}
+
+/* ---------- Top Navbar ---------- */
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--ls-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 12px 0;
+}
+
 .logo-mark {
-    width: 32px;
-    height: 32px;
-    background: linear-gradient(135deg, #0EA5E9, #8B5CF6);
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--ls-primary), #1a5fb4);
+    color: #fff;
     border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: 800;
-    font-size: 0.8rem;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
 }
 
 .logo-text {
-    font-size: 1.2rem;
     font-weight: 700;
-    color: #111827;
+    font-size: 1.25rem;
+    color: var(--ls-dark);
 }
-
 .logo-text span {
-    color: #0EA5E9;
+    color: var(--ls-primary);
 }
 
-/* ===== User Avatar ===== */
-.user-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0EA5E9, #10B981);
+.nav-link-custom {
+    color: #555 !important;
+    font-weight: 500;
+    padding: 8px 14px !important;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+.nav-link-custom:hover {
+    background: #f0f4f9;
+    color: var(--ls-primary) !important;
+}
+.nav-link-active {
+    background: rgba(39, 128, 227, 0.1) !important;
+    color: var(--ls-primary) !important;
+}
+
+/* ---------- Notification button ---------- */
+.notif-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f0f4f9;
+    color: #555;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.15s ease;
+}
+.notif-btn:hover {
+    background: var(--ls-primary);
+    color: #fff;
 }
 
-/* ===== Notification Icon ===== */
-.notif-btn {
+/* ---------- User avatar ---------- */
+.user-avatar {
     width: 36px;
     height: 36px;
-    border-radius: 8px;
-    border: 1px solid #E5E7EB;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ls-primary), #1a5fb4);
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #6B7280;
+    font-weight: 600;
+    font-size: 13px;
+}
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ls-dark);
+}
+.user-role {
+    font-size: 11px;
+    color: #999;
+    text-transform: capitalize;
 }
 
-.notif-btn:hover {
-    border-color: #0EA5E9;
-    color: #0EA5E9;
+/* ---------- Cards ---------- */
+.card {
+    border: 1px solid var(--ls-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-
-/* ===== Nav Link Active State ===== */
-.nav-link-active {
-    color: #0EA5E9 !important;
-    background: #E0F2FE;
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--ls-border);
+    padding: 18px 24px;
     font-weight: 600;
 }
 
-/* ===== Topbar ===== */
-.topbar {
-    background: white;
-    border-bottom: 1px solid #E5E7EB;
-    height: 56px;
+/* ---------- Severity badges ---------- */
+.severity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.severity-low      { background: #d4edda; color: #155724; }
+.severity-medium   { background: #fff3cd; color: #856404; }
+.severity-high     { background: #f8d7da; color: #721c24; }
+.severity-critical { background: #FF0039; color: #fff; }
+
+/* ---------- ID badge ---------- */
+.id-badge {
+    display: inline-block;
+    background: #eef3f9;
+    color: var(--ls-primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: monospace;
 }
 
-/* ===== Footer ===== */
+/* ---------- Table tweaks ---------- */
+.table thead th {
+    background: #f9fafc;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid var(--ls-border);
+}
+.table tbody tr {
+    transition: background 0.12s ease;
+}
+.table-hover tbody tr:hover {
+    background: #f0f7ff;
+    cursor: pointer;
+}
+
+/* ---------- Footer ---------- */
 .site-footer {
-    background: white;
-    border-top: 1px solid #E5E7EB;
-    padding: 1.25rem 2rem;
+    background: #fff;
+    border-top: 1px solid var(--ls-border);
+    padding: 20px 30px;
     margin-top: auto;
 }
-
-.footer-link {
-    font-size: 0.78rem;
-    color: #9CA3AF;
-    text-decoration: none;
-}
-
-.footer-link:hover {
-    color: #0EA5E9;
-}
-
 .footer-text {
-    font-size: 0.78rem;
-    color: #9CA3AF;
+    color: #777;
+    font-size: 13px;
     margin: 0;
 }
-
-.footer-text-small {
-    font-size: 0.72rem;
-    color: #9CA3AF;
-    margin: 0;
+.footer-link {
+    color: #555;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.footer-link:hover {
+    color: var(--ls-primary);
 }
 
-/* ===== User Info in Navbar ===== */
-.user-name {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #111827;
-}
-
-.user-role {
-    font-size: 0.68rem;
-    color: #0EA5E9;
-}
-
-/* ===== Navbar link default ===== */
-.nav-link-custom {
-    font-size: 0.84rem;
-    color: #6B7280;
-    padding: 0.4rem 0.85rem;
+/* ---------- Description box (incident show) ---------- */
+.description-box {
+    background: #fafbfc;
+    padding: 16px;
     border-radius: 6px;
+    border-left: 4px solid var(--ls-primary);
+    white-space: pre-wrap;
+    color: #333;
 }
 
-.nav-link-custom:hover {
-    color: #111827;
-    background: #F3F4F6;
+/* ---------- Empty state ---------- */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+.empty-state i {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 15px;
 }

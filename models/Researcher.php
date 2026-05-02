@@ -30,6 +30,15 @@ class Researcher extends User
         return $this->getUsersByType('researcher');
     }
 
+    public function getResearchersAndGuests() {
+        $sql = "SELECT * FROM Users 
+                WHERE userType IN ('researcher', 'guest_researcher')
+                ORDER BY userType ASC, userName ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 
     public function getResearcherBookings($userID){
         $sql = "SELECT b.*, e.equipmentName

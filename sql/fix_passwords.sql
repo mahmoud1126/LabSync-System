@@ -1,0 +1,1 @@
+UPDATE Users SET userPassword = '\$2y$10$iPr5FOn9EruGYl2AI1UNPO1E3GNkZ2sy49m10.FZYNFamquvl/5MG';
