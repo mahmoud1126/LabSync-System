@@ -22,8 +22,9 @@ class IncidentLog {
         'incidentType' => $incidentType,
         'description'=> $description,
         'severity'=> $severity,
-        'time'=> $timeOfIncident,
+        ':timeOfIncident' => $timeOfIncident,
         ]);
+        return $this->db->lastInsertId();
     }
 
     public function getIncidentByID ($incidentID){

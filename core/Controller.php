@@ -18,7 +18,7 @@ protected function view($viewPath, $data = []){
 
     extract($data);
 
-    $viewFile = __DIR__ . '/../views/' . $viewPath . '.php';
+    $viewFile = __DIR__ . '/../pages/' . $viewPath . '.php';
 
     if (!file_exists($viewFile)) {
         die("⚠️ LabSync Error: View Not Found: views/{$viewPath}.php");
