@@ -170,4 +170,48 @@ class Equipment {
              ':id'     => $equipmentID
         ]);
     }
+
+    public function getDependencies($equipmentID)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT e.*
+               FROM Equipment e
+               JOIN EquipmentDependencies ed ON e.equipmentID = ed.secondaryEquipmentID
+              WHERE ed.primaryEquipmentID = :id"
+        );
+        $stmt->execute([':id' => $equipmentID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function areDependenciesAvailable($equipmentID)
+    {
+        $dependencies = $this->getDependencies($equipmentID);
+
+        foreach ($dependencies as $dep) {
+            if ($dep['equipmentStatus'] !== 'available') {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function addDependency($primaryID, $secondaryID)
+    {
+        if ($primaryID == $secondaryID) return false;
+
+        $stmt = $this->db->prepare(
+            "INSERT IGNORE INTO EquipmentDependencies (primaryEquipmentID, secondaryEquipmentID)
+             VALUES (:pID, :sID)"
+        );
+        return $stmt->execute([':pID' => $primaryID, ':sID' => $secondaryID]);
+    }
+
+    public function removeDependency($primaryID, $secondaryID)
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM EquipmentDependencies
+              WHERE primaryEquipmentID = :pID AND secondaryEquipmentID = :sID"
+        );
+        return $stmt->execute([':pID' => $primaryID, ':sID' => $secondaryID]);
+    }
 }
