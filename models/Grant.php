@@ -356,6 +356,5 @@ class Grant {
             ':userID'  => $userID,
         ]);
     }
-
-
+    
 }

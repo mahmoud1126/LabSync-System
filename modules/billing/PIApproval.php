@@ -15,44 +15,33 @@ class PIApproval {
 
     public function processApproval($transactionID, $piID, $action) {
         
-        $db = Database::getInstance()->getConnection();
-        
-        $stmt = $db->prepare("SELECT * FROM GrantTransactions WHERE transactionID = :id AND approvalStatus = 'pending'");
-        $stmt->execute([':id' => $transactionID]);
-        $transaction = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Step 1: Use the model to fetch the transaction (Pre-condition check)
+        $transaction = $this->transactionModel->getTransactionById($transactionID);
 
-        if (!$transaction) {
+        if (!$transaction || $transaction['approvalStatus'] !== 'pending') {
             return false;
         }
 
-        $stmt = $db->prepare("SELECT * FROM GrantPartitions WHERE transactionID = :id");
-        $stmt->execute([':id' => $transactionID]);
-        $partitions = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+        // Step 2: Handle the PI's selection
         if ($action === 'approve') {
             return $this->transactionModel->approveTransaction($transactionID, $piID);
         }
 
         if ($action === 'reject' || $action === 'refund') {
             
+            // Fetch partitions through the model to see who needs a refund
+            $partitions = $this->transactionModel->getPartitionsByTransactionId($transactionID);
+
             foreach ($partitions as $partition) {
                 $this->grantModel->refundToBalance($partition['grantID'], $partition['amountDeducted']);
             }
 
-            $newStatus = ($action === 'reject') ? 'rejected' : 'refunded';
-            
-            $sql = "UPDATE GrantTransactions 
-                    SET approvalStatus = :status, 
-                        approvedByPIID = :piID, 
-                        approvedAt = NOW() 
-                    WHERE transactionID = :id";
-            
-            $stmt = $db->prepare($sql);
-            return $stmt->execute([
-                ':status' => $newStatus,
-                ':piID' => $piID,
-                ':id' => $transactionID
-            ]);
+            // Update the record status via the model
+            if ($action === 'reject') {
+                return $this->transactionModel->rejectTransaction($transactionID, $piID);
+            } else {
+                return $this->transactionModel->refundTransaction($transactionID, $piID);
+            }
         }
 
         return false;

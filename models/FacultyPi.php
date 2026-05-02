@@ -89,4 +89,20 @@ class FacultyPI extends User {
         $stmt->execute([':pi_id' => $_SESSION['user_id']]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function isAssignedToTransaction($piID, $transactionID): bool {
+        $sql = "SELECT COUNT(*) 
+                FROM GrantTransactions gt
+                JOIN Grants g ON gt.grantID = g.grantID
+                WHERE g.piID = :pi_id 
+                AND gt.transactionID = :tx_id";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':pi_id' => $piID,
+            ':tx_id' => $transactionID
+        ]);
+
+        return (int)$stmt->fetchColumn() > 0;
+    }
 }
