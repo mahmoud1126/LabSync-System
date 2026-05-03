@@ -12,6 +12,7 @@ $router->get('/incidents/create', 'IncidentController', 'create');
 $router->post('/incidents/store','IncidentController', 'store');
 $router->get('/incidents/{id}', 'IncidentController', 'show');
 
+<<<<<<< Updated upstream
 
 
 $router->get('/admin', 'AdminController', 'index');
@@ -47,3 +48,12 @@ $router->get('/admin/logs/{id}',       'AdminController', 'showAuditLog');
 $router->get('/admin/briefings',          'AdminController', 'briefings');
 $router->get('/admin/briefings/create',   'AdminController', 'createBriefing');
 $router->post('/admin/briefings/store',   'AdminController', 'storeBriefing');
+=======
+// COMPLIANCE
+$router->post('/compliance/requestSupervision',    'ComplianceController', 'requestSupervision');
+$router->get('/compliance/pending-supervisions',   'ComplianceController', 'showPendingSupervisions');
+$router->post('/compliance/approveSupervision',    'ComplianceController', 'approveSupervision');
+$router->post('/compliance/rejectSupervision',     'ComplianceController', 'rejectSupervision');
+$router->get('/compliance/hazmat-alert',           'ComplianceController', 'displayAlert');
+$router->post('/compliance/acknowledgeWarning',    'ComplianceController', 'acknowledgeWarning');
+>>>>>>> Stashed changes
