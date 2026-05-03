@@ -69,6 +69,8 @@ CREATE TABLE Equipment (
     isDualUse BOOLEAN DEFAULT FALSE,
 
     totalUsageHours DECIMAL(10,2) DEFAULT 0.00,
+    
+    userTotalHours DECIMAL(10,2) DEFAULT 0.00,
 
     calibrationThresholdHours DECIMAL(10,2) DEFAULT 100.00,
 
