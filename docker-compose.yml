@@ -20,8 +20,8 @@ services:
         MYSQL_ROOT_PASSWORD: 123456
         MYSQL_DATABASE: labsync
     volumes:
-      - ./mysql_data:/var/lib/mysql
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     ports:
       - "3306:3306"
 
