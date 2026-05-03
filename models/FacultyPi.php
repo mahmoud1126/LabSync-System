@@ -1,6 +1,6 @@
 <?php
 
-require_once 'User.php';
+require_once 'Users.php';
 
 class FacultyPI extends User {
 
@@ -13,6 +13,27 @@ class FacultyPI extends User {
     public function getRole() {
         return 'faculty_pi';
     }
+
+
+
+    public function createFacultyPI($userName, $userPassword, $clearanceLevel = 4, $maxBookingHoursPerWeek = 40) {
+        return $this->createUser(
+            $userName,
+            $userPassword,
+            'faculty_pi',
+            'active',
+            $clearanceLevel,
+            false,                    
+            $maxBookingHoursPerWeek
+        );
+    }
+
+    public function getAllPIs() {
+        return $this->getUsersByType('faculty_pi');
+    }
+
+
+
 
     public function approveGrantAccess($researcherID, $grantID): bool {
         $sql = "UPDATE GrantTransactions 

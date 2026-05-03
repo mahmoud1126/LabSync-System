@@ -1,6 +1,6 @@
 <?php
 
-require_once 'User.php';
+require_once 'Users.php';
 
 class LabManager extends User {
 
@@ -10,6 +10,24 @@ class LabManager extends User {
     public function getRole() {
         return 'lab_manager';
     }
+
+
+    public function createLabManager($userName, $userPassword, $clearanceLevel = 5, $maxBookingHoursPerWeek = 40) {
+        return $this->createUser(
+            $userName,
+            $userPassword,
+            'lab_manager',
+            'active',
+            $clearanceLevel,
+            false,                      
+            $maxBookingHoursPerWeek
+        );
+    }
+
+    public function getAllLabManagers() {
+        return $this->getUsersByType('lab_manager');
+    }
+
 
     public function submitIncidentReport($userID, $equipmentID, $incidentType, $description): void {
         $stmt = $this->db->prepare("INSERT INTO IncidentReports 
