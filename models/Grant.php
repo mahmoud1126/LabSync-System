@@ -338,6 +338,12 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+        public function verifyUserGrantAccess($grantID, $userID) {
+            $stmt = $this->db->prepare("SELECT 1 FROM GrantUserAccess WHERE grantID = ? AND userID = ?");
+            $stmt->execute([$grantID, $userID]);
+            return (bool)$stmt->fetch();
+        }
+
 
         public function updateBillingPercentage($grantID, $userID, $newPercentage)
     {
@@ -356,5 +362,5 @@ class Grant {
             ':userID'  => $userID,
         ]);
     }
-    
+
 }
