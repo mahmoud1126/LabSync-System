@@ -11,24 +11,42 @@ class Booking {
     }
 
     public function createBooking($userID, $equipmentID, $startTime, $endTime, $bookingStatus = 'pending', $isAutoBooked = false, $parentBookingID = null, $grantID = null, $labManagerID = null) {
+    
         $sql = "INSERT INTO Bookings (userID, equipmentID, startTime, endTime, bookingStatus, isAutoBooked, parentBookingID, grantID, labManagerID)
                 VALUES (:userID, :equipmentID, :startTime, :endTime, :status, :isAutoBooked, :parentBookingID, :grantID, :labManagerID)";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':userID'=> $userID,
-            ':equipmentID'=> $equipmentID,
-            ':startTime'=> $startTime,
-            ':endTime'=> $endTime,
-            ':status'=> $bookingStatus,
-            ':isAutoBooked'=> $isAutoBooked ? 1 : 0,
-            ':parentBookingID'=> $parentBookingID,
-            ':grantID'=> $grantID,
-            ':labManagerID'=> $labManagerID
-        ]);
+        try {
+            $stmt = $this->db->prepare($sql);
+            $success = $stmt->execute([
+                ':userID'          => $userID,
+                ':equipmentID'     => $equipmentID,
+                ':startTime'       => $startTime,
+                ':endTime'         => $endTime,
+                ':status'          => $bookingStatus,
+                ':isAutoBooked'    => $isAutoBooked ? 1 : 0,
+                ':parentBookingID' => $parentBookingID,
+                ':grantID'         => $grantID,
+                ':labManagerID'    => $labManagerID
+            ]);
 
-        return $this->db->lastInsertId();
-    }
+            if ($success) {
+                $bookingID = $this->db->lastInsertId();
+
+                $briefingStmt = $this->db->prepare("SELECT content FROM SafetyBriefings WHERE equipmentID = ?");
+                $briefingStmt->execute([$equipmentID]);
+                $content = $briefingStmt->fetchColumn();
+
+                return [
+                    'bookingID'       => $bookingID,
+                    'briefingContent' => $content ?: "Please follow standard lab safety protocols."
+                ];
+            }
+
+            return false;
+        } catch (PDOException $e) {
+            return false;
+        }
+}
 
 
 
