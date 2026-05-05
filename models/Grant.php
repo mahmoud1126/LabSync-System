@@ -58,6 +58,23 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getGrantsByResearcher($userID) {
+    $query = "
+        SELECT g.*, gua.accessLevel, gua.dateAssigned 
+        FROM Grants g
+        JOIN GrantUserAccess gua ON g.grantID = gua.grantID
+        WHERE gua.userID = :userID AND g.grantStatus = 'active'
+    ";
+
+    try {
+        $stmt = $this->db->prepare($query);
+        $stmt->execute([':userID' => $userID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
 
         public function getActiveGrants()
     {

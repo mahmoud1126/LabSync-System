@@ -214,4 +214,52 @@ class Equipment {
         );
         return $stmt->execute([':pID' => $primaryID, ':sID' => $secondaryID]);
     }
+
+    public function createBooking($userID, $equipmentID, $startTime, $endTime) {
+    try {
+        $this->db->beginTransaction();
+
+        $checkQuery = "SELECT COUNT(*) FROM Bookings 
+                       WHERE equipmentID = :eid 
+                       AND status != 'cancelled'
+                       AND ((startTime < :end AND endTime > :start))";
+        $stmt = $this->db->prepare($checkQuery);
+        $stmt->execute([
+            ':eid'   => $equipmentID,
+            ':start' => $startTime,
+            ':end'   => $endTime
+        ]);
+
+        if ($stmt->fetchColumn() > 0) {
+            $this->db->rollBack();
+            return false;
+        }
+
+        $insertQuery = "INSERT INTO Bookings (userID, equipmentID, startTime, endTime, status) 
+                        VALUES (:uid, :eid, :start, :end, 'pending')";
+        $stmt = $this->db->prepare($insertQuery);
+        $stmt->execute([
+            ':uid'   => $userID,
+            ':eid'   => $equipmentID,
+            ':start' => $startTime,
+            ':end'   => $endTime
+        ]);
+
+        $safetyQuery = "SELECT safetyBriefingContent FROM Equipment WHERE equipmentID = :eid";
+        $stmt = $this->db->prepare($safetyQuery);
+        $stmt->execute([':eid' => $equipmentID]);
+        $briefingContent = $stmt->fetchColumn();
+
+        $this->db->commit();
+
+        return [
+            'briefingContent' => $briefingContent
+        ];
+
+    } catch (PDOException $e) {
+        if ($this->db->inTransaction()) $this->db->rollBack();
+        return false;
+    }
 }
+}
+

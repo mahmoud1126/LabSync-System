@@ -40,7 +40,8 @@ $router->post('/admin/equipment/{id}/rate',     'AdminController', 'updateEquipm
 //Grants Overview 
 $router->get('/admin/grants',          'AdminController', 'grants');
 $router->get('/admin/grants/{id}',     'AdminController', 'showGrant');
-
+$router->get('/pi/dashboard', 'PIController', 'index');
+$router->post('/pi/approve-transaction', 'PIController', 'approveTransaction');
 
 //Audit Logs 
 $router->get('/admin/logs',            'AdminController', 'auditLogs');
@@ -51,6 +52,13 @@ $router->get('/admin/logs/{id}',       'AdminController', 'showAuditLog');
 $router->get('/admin/briefings',          'AdminController', 'briefings');
 $router->get('/admin/briefings/create',   'AdminController', 'createBriefing');
 $router->post('/admin/briefings/store',   'AdminController', 'storeBriefing');
+
+
+// Researcher Equipment & Bookings
+$router->get('/equipment', 'EquipmentController', 'index');
+$router->post('/EquipmentController/book', 'EquipmentController', 'book');
+$router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
+
 
 // COMPLIANCE
 $router->post('/compliance/requestSupervision',    'ComplianceController', 'requestSupervision');

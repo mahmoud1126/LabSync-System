@@ -169,4 +169,22 @@ class Researcher extends User
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row['totalSpent'];
     }
+
+
+    public function saveSafetyAcknowledgment($userID, $equipmentID) {
+        $sql = "INSERT INTO SafetyAcknowledgments (userID, equipmentID, acknowledgedAt) 
+                VALUES (:userID, :equipmentID, NOW())
+                ON DUPLICATE KEY UPDATE acknowledgedAt = NOW()";
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            return $stmt->execute([
+                ':userID'      => $userID,
+                ':equipmentID' => $equipmentID
+            ]);
+        } catch (PDOException $e) {
+            // Log error if necessary
+            return false;
+        }
+    }
 }

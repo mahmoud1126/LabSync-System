@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../core/BaseController.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Users.php';
 require_once __DIR__ . '/../models/IncidentLog.php';
 
@@ -16,25 +16,25 @@ class DashboardController extends BaseController {
     }
 
     public function index() {
-        $userID = $_SESSION['userID'];
-        $role = $_SESSION['userType'];
+        $this->requireLogin();
+        $role = $this->getCurrentUserRole();
         
         $data = [
-            'role' => $role,
-            'safetyBriefing' => $this->userModel->hasSafetyBriefingAcknowledged($userID),
-            'userInfo' => $this->userModel->getUserById($userID)
+            'title' => 'LabSync Dashboard',
+            'user' => $this->getCurrentUser()
         ];
 
-        if ($role === 'lab_manager') {
-            $data['totalUsers'] = count($this->userModel->getAllUsers());
-            $data['allIncidents'] = $this->incidentModel->getAllIncidents();
-        } else {
-            $hoursData = $this->userModel->getCurrentWeeklyBookedHours($userID);
-            $data['bookedHours'] = $hoursData['currentWeeklyBookedHours'] ?? 0;
-            $data['maxHours'] = $hoursData['maxBookingHoursPerWeek'] ?? 20;
-            $data['myIncidents'] = $this->incidentModel->getIncidentsByUserID($userID);
+        switch ($role) {
+            case 'lab_manager':
+                return $this->view('admin/index', $data);
+            case 'faculty_pi':
+                return $this->view('pi/dashboard', $data); 
+            case 'researcher':
+            case 'guest_researcher':
+                return $this->view('researcher/dashboard', $data); 
+            default:
+                $this->redirect('/login');
         }
-
-        $this->view('dashboard/index', $data);
     }
+
 }

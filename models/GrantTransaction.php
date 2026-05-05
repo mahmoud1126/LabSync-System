@@ -10,7 +10,6 @@ class GrantTransaction {
         $this->db = Database::getInstance()->getConnection();
     }
 
-
     public function createTransaction($grantID, $userID, $amount, $type, $desc, $base = 0, $cons = 0, $over = 0, $sessionID = null, $bookingID = null) {
         $sql = "INSERT INTO GrantTransactions 
                     (grantID, userID, sessionID, bookingID, amount, transactionType, description, baseCost, consumableCost, overheadCost, approvalStatus)
@@ -40,20 +39,70 @@ class GrantTransaction {
     }
 
 
-    public function getPartitionsByTransactionId($id) {
-        $stmt = $this->db->prepare("SELECT * FROM GrantPartitions WHERE transactionID = :id");
-        $stmt->execute([':id' => $id]);
+    public function getPendingByPI($piID) {
+        $sql = "SELECT gt.*, g.grantName, u.userName 
+                FROM GrantTransactions gt
+                JOIN Grants g ON gt.grantID = g.grantID
+                JOIN Users u ON gt.userID = u.userID
+                WHERE g.piID = :piID AND gt.approvalStatus = 'pending'
+                ORDER BY gt.createdAt ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':piID' => $piID]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 
+    public function getRecentByPI($piID) {
+        $sql = "SELECT gt.*, g.grantName, u.userName 
+                FROM GrantTransactions gt
+                JOIN Grants g ON gt.grantID = g.grantID
+                JOIN Users u ON gt.userID = u.userID
+                WHERE g.piID = :piID AND gt.approvalStatus != 'pending'
+                ORDER BY gt.createdAt DESC 
+                LIMIT 15"; 
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':piID' => $piID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateStatus($transactionID, $newStatus) {
+        $piID = $_SESSION['user']['userID'] ?? null;
+
+        return match ($newStatus) {
+            'approved' => $this->approveTransaction($transactionID, $piID),
+            'rejected' => $this->rejectTransaction($transactionID, $piID),
+            'refunded' => $this->refundTransaction($transactionID, $piID),
+            default    => false,
+        };
+    }
+
     public function approveTransaction($transactionID, $piID) {
+    try {
+        $this->db->beginTransaction();
+        $stmt = $this->db->prepare("SELECT amount, grantID FROM GrantTransactions WHERE transactionID = ?");
+        $stmt->execute([$transactionID]);
+        $tx = $stmt->fetch(PDO::FETCH_ASSOC);
+        $grantModel = new Grant();
+        $deducted = $grantModel->deductFromBalance($tx['grantID'], $tx['amount']);
+
+        if (!$deducted) {
+            throw new Exception("Insufficient grant balance.");
+        }
+
         $sql = "UPDATE GrantTransactions 
                 SET approvalStatus = 'approved', approvedByPIID = :piID, approvedAt = NOW() 
                 WHERE transactionID = :id";
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':piID' => $piID, ':id' => $transactionID]);
+        $stmt->execute([':piID' => $piID, ':id' => $transactionID]);
+
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        return false;
     }
+}
 
     public function rejectTransaction($transactionID, $piID) {
         $sql = "UPDATE GrantTransactions 
@@ -71,49 +120,12 @@ class GrantTransaction {
         return $stmt->execute([':piID' => $piID, ':id' => $transactionID]);
     }
 
-    public function updateStatus($transactionID, $newStatus) {
-    $piID = $_SESSION['user_id'] ?? null;
-
-    return match ($newStatus) {
-        'approved' => $this->approveTransaction($transactionID, $piID),
-        'rejected' => $this->rejectTransaction($transactionID, $piID),
-        'refunded' => $this->refundTransaction($transactionID, $piID),
-        default    => false,
-    };
-}
-
     public function createPartition($transactionID, $grantID, $percentage, $amount) {
         $sql = "INSERT INTO GrantPartitions (transactionID, grantID, percentage, amountDeducted)
                 VALUES (:tID, :gID, :pct, :amt)";
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([':tID' => $transactionID, ':gID' => $grantID, ':pct' => $percentage, ':amt' => $amount]);
     }
-
-    public function getPendingByPI($piID) {
-        $sql = "SELECT gt.*, g.grantName, u.userName 
-                FROM GrantTransactions gt
-                JOIN Grants g ON gt.grantID = g.grantID
-                JOIN Users u ON gt.userID = u.userID
-                WHERE g.piID = :piID AND gt.approvalStatus = 'pending'
-                ORDER BY gt.createdAt ASC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':piID' => $piID]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    public function getRecentByPI($piID) {
-        $sql = "SELECT gt.*, g.grantName, u.userName 
-                FROM GrantTransactions gt
-                JOIN Grants g ON gt.grantID = g.grantID
-                JOIN Users u ON gt.userID = u.userID
-                WHERE g.piID = :piID AND gt.approvalStatus != 'pending'
-                ORDER BY gt.createdAt DESC 
-                LIMIT 15"; 
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':piID' => $piID]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
 
     public function getByGrant($grantID) {
         $sql = "SELECT * FROM GrantTransactions WHERE grantID = :id ORDER BY createdAt DESC";
