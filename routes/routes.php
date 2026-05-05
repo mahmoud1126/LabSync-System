@@ -16,6 +16,12 @@ $router->post('/incidents/store','IncidentController', 'store');
 $router->get('/incidents/{id}', 'IncidentController', 'show');
 
 
+//  EQUIPMENT (General)
+$router->get('/equipment',             'EquipmentController', 'index');
+$router->get('/equipment/info/{id}',   'EquipmentController', 'info');
+$router->get('/equipment/create',      'EquipmentController', 'create');
+$router->get('/equipment/edit/{id}',   'EquipmentController', 'edit');
+$router->post('/equipment/delete/{id}','EquipmentController', 'delete');
 
 
 $router->get('/admin', 'AdminController', 'index');
@@ -30,7 +36,7 @@ $router->post('/admin/users/{id}/status',       'AdminController', 'updateUserSt
 $router->post('/admin/users/{id}/clearance',    'AdminController', 'updateUserClearance');
 
 
-//Equipment Management 
+//Equipment Management (Admin Overrides)
 $router->get('/admin/equipment',                'AdminController', 'equipment');
 $router->get('/admin/equipment/{id}',           'AdminController', 'showEquipment');
 $router->post('/admin/equipment/{id}/status',   'AdminController', 'updateEquipmentStatus');
@@ -67,4 +73,8 @@ $router->post('/compliance/approveSupervision',    'ComplianceController', 'appr
 $router->post('/compliance/rejectSupervision',     'ComplianceController', 'rejectSupervision');
 $router->get('/compliance/hazmat-alert',           'ComplianceController', 'displayAlert');
 $router->post('/compliance/acknowledgeWarning',    'ComplianceController', 'acknowledgeWarning');
+
+// Add these to your routes.php
+$router->post('/equipment/store',        'EquipmentController', 'store');
+$router->post('/equipment/update/{id}',  'EquipmentController', 'update');
 
