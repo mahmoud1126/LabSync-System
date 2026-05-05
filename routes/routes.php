@@ -60,3 +60,7 @@ $router->post('/compliance/rejectSupervision',     'ComplianceController', 'reje
 $router->get('/compliance/hazmat-alert',           'ComplianceController', 'displayAlert');
 $router->post('/compliance/acknowledgeWarning',    'ComplianceController', 'acknowledgeWarning');
 
+// SESSIONS
+$router->get('/sessions/active',  'SessionController', 'active');
+$router->post('/sessions/start',  'SessionController', 'start');
+$router->post('/sessions/end',    'SessionController', 'end');

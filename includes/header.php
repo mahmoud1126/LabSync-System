@@ -54,6 +54,12 @@ function isActive($page, $current) {
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link nav-link-custom <?= isActive('sessions', $currentPage) ?>"
+                       href="/LabSync-System/sessions/active">
+                       Sessions
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link nav-link-custom <?= isActive('grants', $currentPage) ?>"
                        href="/LabSync-System/grants">
                        Grants
@@ -65,6 +71,15 @@ function isActive($page, $current) {
                        Incidents
                     </a>
                 </li>
+
+                <?php if (in_array($userRole, ['lab_manager'])): ?>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-custom <?= isActive('compliance', $currentPage) ?>"
+                       href="/LabSync-System/compliance/pending-supervisions">
+                       Supervisions
+                    </a>
+                </li>
+                <?php endif; ?>
 
                 <?php if (in_array($userRole, ['lab_manager'])): ?>
                 <li class="nav-item">
