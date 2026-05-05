@@ -14,7 +14,7 @@ class Equipment {
     public function getEquipmentById($equipmentID)
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM Equipment WHERE equipmentID = :id"
+            "SELECT *, equipmentName AS name FROM Equipment WHERE equipmentID = :id"
         );
         $stmt->execute([':id' => $equipmentID]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -23,7 +23,7 @@ class Equipment {
     public function getAllEquipment()
     {
         $stmt = $this->db->prepare(
-            "SELECT * FROM Equipment ORDER BY equipmentName ASC"
+            "SELECT *, equipmentName AS name FROM Equipment ORDER BY equipmentName ASC"
         );
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -213,5 +213,54 @@ class Equipment {
               WHERE primaryEquipmentID = :pID AND secondaryEquipmentID = :sID"
         );
         return $stmt->execute([':pID' => $primaryID, ':sID' => $secondaryID]);
+    }
+
+    public function deleteEquipment($equipmentID)
+{
+    try {
+        $this->db->beginTransaction();
+
+        $stmt1 = $this->db->prepare("DELETE FROM EquipmentDependencies WHERE primaryEquipmentID = :id OR secondaryEquipmentID = :id");
+        $stmt1->execute([':id' => $equipmentID]);
+
+        $stmt2 = $this->db->prepare("DELETE FROM Bookings WHERE equipmentID = :id");
+        $stmt2->execute([':id' => $equipmentID]);
+
+        $stmt3 = $this->db->prepare("DELETE FROM Equipment WHERE equipmentID = :id");
+        $stmt3->execute([':id' => $equipmentID]);
+
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollBack();
+        return false;
+    }
+}
+
+public function createEquipment($data) {
+        $stmt = $this->db->prepare("INSERT INTO Equipment (equipmentName, equipmentStatus, hourlyRateExternal, requiredClearanceLevel) 
+                                    VALUES (:name, :status, :rate, :clearance)");
+        return $stmt->execute([
+            ':name'      => $data['equipmentName'],
+            ':status'    => $data['equipmentStatus'],
+            ':rate'      => $data['hourlyRateExternal'],
+            ':clearance' => $data['requiredClearanceLevel']
+        ]);
+    }
+
+    public function updateEquipment($id, $data) {
+        $stmt = $this->db->prepare("UPDATE Equipment 
+                                    SET equipmentName = :name, 
+                                        equipmentStatus = :status, 
+                                        hourlyRateExternal = :rate, 
+                                        requiredClearanceLevel = :clearance
+                                    WHERE equipmentID = :id");
+        return $stmt->execute([
+            ':name'      => $data['equipmentName'],
+            ':status'    => $data['equipmentStatus'],
+            ':rate'      => $data['hourlyRateExternal'],
+            ':clearance' => $data['requiredClearanceLevel'],
+            ':id'        => $id
+        ]);
     }
 }
