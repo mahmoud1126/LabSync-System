@@ -65,15 +65,6 @@ function isActive($page, $current) {
                        Incidents
                     </a>
                 </li>
-
-                <?php if (in_array($userRole, ['lab_manager'])): ?>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= isActive('admin', $currentPage) ?>"
-                       href="/LabSync-System/admin">
-                       Admin
-                    </a>
-                </li>
-                <?php endif; ?>
             </ul>
 
             <!-- Right side: user only -->

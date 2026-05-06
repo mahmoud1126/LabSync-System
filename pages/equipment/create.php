@@ -11,7 +11,7 @@
             <form action="/equipment/store" method="POST" enctype="multipart/form-data">
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Equipment Name</label>
-                    <input type="text" class="form-control" name="equipmentName" required>
+                    <input type="text" class="form-control" name="equipmentName" placeholder="e.g. Laser Cutter X1" required>
                 </div>
                 
                 <div class="row mb-4">
@@ -27,10 +27,30 @@
                         <input type="number" step="0.01" class="form-control" name="hourlyRateExternal" required>
                     </div>
                 </div>
+
+                <!-- New Buffer Minutes Fields -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Power-Up Buffer (mins)</label>
+                        <input type="number" class="form-control" name="powerUpBufferMinutes" min="0" value="0" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cool-Down Buffer (mins)</label>
+                        <input type="number" class="form-control" name="coolDownBufferMinutes" min="0" value="0" required>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Required Clearance Level</label>
                     <input type="number" class="form-control" name="requiredClearanceLevel" min="0" max="5" value="1" required>
                 </div>
+
+                <!-- New Safety Briefing Field -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Safety Briefing Content</label>
+                    <textarea class="form-control" name="briefingContent" rows="4" placeholder="Enter safety instructions for users..." required></textarea>
+                </div>
+
                 <div class="d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary px-4"><i class="bi bi-save me-1"></i> Save Equipment</button>
                 </div>

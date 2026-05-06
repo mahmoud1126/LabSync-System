@@ -11,17 +11,55 @@ class EquipmentController extends BaseController {
     public function __construct() {
         $this->equipmentModel = new Equipment();
         $this->clearanceModule = new SecurityClearance();
-        $this->userModel = new Researcher();
+         $this->userModel = new Researcher();
     }
 
-
+    /**
+     * Main Index Router:
+     * Redirects users to the correct view based on their role
+     */
     public function index() {
-    $this->requireLogin(); 
-    $userID = $this->getCurrentUserID(); 
-    $userRole = $this->getCurrentUserRole();
-    $allEquipment = $this->equipmentModel->getAllEquipment();
+        $this->requireLogin();
+        $userRole = $this->getCurrentUserRole();
 
-    if ($allEquipment) {
+        if ($userRole === 'lab_manager') {
+            $this->managerIndex();
+        } else if ($userRole === 'researcher' || $userRole === 'guest_researcher') {
+            $this->researcherIndex();
+        } else {
+            $this->redirect('/dashboard');
+        }
+    }
+
+    /**
+     * Lab Manager Equipment View
+     */
+    private function managerIndex() {
+        $this->requireRole('lab_manager');
+        $allEquipment = $this->equipmentModel->getAllEquipment();
+
+        foreach ($allEquipment as &$eq) {
+            $eq['hasAccess'] = true;
+            $eq['accessMessage'] = 'Full Administrative Access';
+            $eq['canShowBookButton'] = false;
+        }
+
+        $this->view('equipment/index', [
+            'equipment' => $allEquipment,
+            'userRole' => 'lab_manager'
+        ]);
+    }
+
+    /**
+     * Researcher & Guest Researcher Booking View
+     */
+    public function researcherIndex() {
+        $this->requireRole(['researcher', 'guest_researcher']);
+        
+        $userID = $this->getCurrentUserID();
+        $userRole = $this->getCurrentUserRole();
+        $allEquipment = $this->equipmentModel->getAllEquipment();
+
         foreach ($allEquipment as &$eq) {
             $clearanceCheck = $this->clearanceModule->verifyAccess($userID, $eq['equipmentID']);
             $eq['hasAccess'] = $clearanceCheck['success'];
@@ -29,16 +67,12 @@ class EquipmentController extends BaseController {
             
             $eq['depsReady'] = $this->equipmentModel->areDependenciesAvailable($eq['equipmentID']);
             
-            $eq['canShowBookButton'] = ($userRole === 'researcher' || $userRole === 'guest_researcher') && 
-                                       $eq['hasAccess'] && 
+            $eq['canShowBookButton'] = $eq['hasAccess'] && 
                                        ($eq['equipmentStatus'] === 'available') && 
                                        $eq['depsReady'];
         }
-    } else {
-        $allEquipment = [];
-    }
 
-    $this->view('Researcher/ResearcherEquipment', [
+         $this->view('Researcher/ResearcherEquipment', [
         'equipments' => $allEquipment,
         'userRole' => $userRole,
         'user' => $this->userModel->getUserByID($userID)
@@ -97,7 +131,6 @@ class EquipmentController extends BaseController {
     }
 
     public function create() {
-        // Use BaseController's role protection
         $this->requireRole('lab_manager');
         $this->view('equipment/create');
     }
@@ -108,60 +141,56 @@ class EquipmentController extends BaseController {
         $this->view('equipment/edit', ['equipment' => $equipmentInfo]);
     }
 
-    public function delete($id) {
+    /**
+     * Processes creation including Safety Briefings and Buffer Minutes
+     */
+    public function store() { 
         $this->requireRole('lab_manager');
         
-        if ($this->equipmentModel->deleteEquipment($id)) {
-            $this->setFlash('success', 'Equipment deleted successfully.');
-        } else {
-            $this->setFlash('error', 'Failed to delete equipment.');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Passes $_POST containing briefingContent, powerUpBufferMinutes, and coolDownBufferMinutes
+            $success = $this->equipmentModel->createEquipment($_POST);
+            
+            if ($success) {
+                $this->redirect('/equipment');
+            } else {
+                echo "Failed to create equipment and safety briefing.";
+            }
         }
-
-        // Use BaseController's redirect method
-        $this->redirect('/equipment');
     }
-// Save new equipment
- public function store() {
+
+    /**
+     * Processes updates including Safety Briefings and Buffer Minutes
+     */
+    public function update($id) { 
         $this->requireRole('lab_manager');
-        $imageName = $this->handleUpload();
-
-        $data = [
-            'equipmentName' => $this->getPost('equipmentName'),
-            'equipmentStatus' => $this->getPost('equipmentStatus'),
-            'hourlyRateExternal' => $this->getPost('hourlyRateExternal'),
-            'requiredClearanceLevel' => $this->getPost('requiredClearanceLevel')
-        ];
-
-        $this->equipmentModel->createEquipment($data) ? 
-            $this->setFlash('success', 'Equipment added!') : $this->setFlash('error', 'Failed to add.');
         
-        $this->redirect('/equipment');
-    }
-
-    public function update($id) {
-        $this->requireRole('lab_manager');
-        $existing = $this->equipmentModel->getEquipmentById($id);
-
-        $data = [
-            'equipmentName' => $this->getPost('equipmentName'),
-            'equipmentStatus' => $this->getPost('equipmentStatus'),
-            'hourlyRateExternal' => $this->getPost('hourlyRateExternal'),
-            'requiredClearanceLevel' => $this->getPost('requiredClearanceLevel')
-        ];
-
-        $this->equipmentModel->updateEquipment($id, $data) ? 
-            $this->setFlash('success', 'Updated!') : $this->setFlash('error', 'Update failed.');
-        
-        $this->redirect('/equipment');
-    }
-
-    private function handleUpload() {
-        if (!empty($_FILES['equipmentImage']['name'])) {
-            $name = time() . '_' . $_FILES['equipmentImage']['name'];
-            $target = __DIR__ . '/../../public/uploads/equipment/' . $name;
-            if (move_uploaded_file($_FILES['equipmentImage']['tmp_name'], $target)) return $name;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $success = $this->equipmentModel->updateEquipment($id, $_POST);
+            
+            if ($success) {
+                $this->redirect('/equipment');
+            } else {
+                echo "Failed to update equipment details.";
+            }
         }
-        return null;
     }
-    
+
+    /**
+     * Processes deletion
+     * (SafetyBriefings are removed automatically via SQL ON DELETE CASCADE)
+     */
+    public function delete($id) { 
+        $this->requireRole('lab_manager');
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $success = $this->equipmentModel->deleteEquipment($id);
+            
+            if ($success) {
+                $this->redirect('/equipment');
+            } else {
+                echo "Failed to delete equipment.";
+            }
+        }
+    }
 }

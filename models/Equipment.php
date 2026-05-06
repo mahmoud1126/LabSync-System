@@ -238,31 +238,83 @@ class Equipment {
 }
 
 public function createEquipment($data) {
-        $stmt = $this->db->prepare("INSERT INTO Equipment (equipmentName, equipmentStatus, hourlyRateExternal, requiredClearanceLevel) 
-                                    VALUES (:name, :status, :rate, :clearance)");
-        return $stmt->execute([
-            ':name'      => $data['equipmentName'],
-            ':status'    => $data['equipmentStatus'],
-            ':rate'      => $data['hourlyRateExternal'],
-            ':clearance' => $data['requiredClearanceLevel']
-        ]);
+        try {
+            $this->db->beginTransaction();
+
+            // Insert into Equipment table including buffer minutes
+            $stmt = $this->db->prepare("INSERT INTO Equipment 
+                (equipmentName, equipmentStatus, hourlyRateExternal, requiredClearanceLevel, powerUpBufferMinutes, coolDownBufferMinutes) 
+                VALUES (:name, :status, :rate, :clearance, :powerUp, :coolDown)");
+            
+            $stmt->execute([
+                ':name'      => $data['equipmentName'],
+                ':status'    => $data['equipmentStatus'],
+                ':rate'      => $data['hourlyRateExternal'],
+                ':clearance' => $data['requiredClearanceLevel'],
+                ':powerUp'   => $data['powerUpBufferMinutes'] ?? 0,
+                ':coolDown'  => $data['coolDownBufferMinutes'] ?? 0
+            ]);
+
+            $equipmentID = $this->db->lastInsertId();
+
+            // Insert into SafetyBriefings table
+            if (!empty($data['briefingContent'])) {
+                $stmtB = $this->db->prepare("INSERT INTO SafetyBriefings (equipmentID, briefingContent) VALUES (:eid, :content)");
+                $stmtB->execute([
+                    ':eid'     => $equipmentID,
+                    ':content' => $data['briefingContent']
+                ]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
     }
 
     public function updateEquipment($id, $data) {
-        $stmt = $this->db->prepare("UPDATE Equipment 
-                                    SET equipmentName = :name, 
-                                        equipmentStatus = :status, 
-                                        hourlyRateExternal = :rate, 
-                                        requiredClearanceLevel = :clearance
-                                    WHERE equipmentID = :id");
-        return $stmt->execute([
-            ':name'      => $data['equipmentName'],
-            ':status'    => $data['equipmentStatus'],
-            ':rate'      => $data['hourlyRateExternal'],
-            ':clearance' => $data['requiredClearanceLevel'],
-            ':id'        => $id
-        ]);
-    }
-}
+        try {
+            $this->db->beginTransaction();
 
+            // Update Equipment table
+            $stmt = $this->db->prepare("UPDATE Equipment 
+                                        SET equipmentName = :name, 
+                                            equipmentStatus = :status, 
+                                            hourlyRateExternal = :rate, 
+                                            requiredClearanceLevel = :clearance,
+                                            powerUpBufferMinutes = :powerUp,
+                                            coolDownBufferMinutes = :coolDown
+                                        WHERE equipmentID = :id");
+            $stmt->execute([
+                ':name'      => $data['equipmentName'],
+                ':status'    => $data['equipmentStatus'],
+                ':rate'      => $data['hourlyRateExternal'],
+                ':clearance' => $data['requiredClearanceLevel'],
+                ':powerUp'   => $data['powerUpBufferMinutes'],
+                ':coolDown'  => $data['coolDownBufferMinutes'],
+                ':id'        => $id
+            ]);
+
+            // Update or Insert Safety Briefing
+            $stmtB = $this->db->prepare("INSERT INTO SafetyBriefings (equipmentID, briefingContent) 
+                                         VALUES (:id, :content) 
+                                         ON DUPLICATE KEY UPDATE briefingContent = :content2");
+            $stmtB->execute([
+                ':id'       => $id,
+                ':content'  => $data['briefingContent'],
+                ':content2' => $data['briefingContent']
+            ]);
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+   
+}
 
