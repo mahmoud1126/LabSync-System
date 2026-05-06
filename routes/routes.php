@@ -29,10 +29,15 @@ $router->post('/EquipmentController/book', 'EquipmentController', 'book');
 $router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
 
 // --- BOOKINGS ---
-// --- BOOKINGS ---
-$router->get('/bookings', 'BookingController', 'index'); // ADD THIS LINE
+$router->get('/bookings', 'BookingController', 'index');
 $router->get('/booking/index', 'BookingController', 'index');
 $router->post('/booking/store', 'BookingController', 'store');
+$router->post('/booking/cancel/{id}', 'BookingController', 'cancel');
+$router->get('/booking/view', 'BookingController', 'details');
+
+
+$router->get('/grants', 'GrantController', 'index');
+$router->post('/grants/reallocate', 'GrantController', 'reallocate');
 
 // --- ADMIN ---
 $router->get('/admin', 'AdminController', 'index');

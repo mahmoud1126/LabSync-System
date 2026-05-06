@@ -10,11 +10,11 @@ class GrantTransaction {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function createTransaction($grantID, $userID, $amount, $type, $desc, $base = 0, $cons = 0, $over = 0, $sessionID = null, $bookingID = null) {
+    public function createTransaction($grantID, $userID, $amount, $type, $desc, $base = 0, $cons = 0, $over = 0, $sessionID = null, $bookingID = null, $status = 'pending') {
         $sql = "INSERT INTO GrantTransactions 
                     (grantID, userID, sessionID, bookingID, amount, transactionType, description, baseCost, consumableCost, overheadCost, approvalStatus)
                 VALUES 
-                    (:grantID, :userID, :sessionID, :bookingID, :amount, :type, :desc, :base, :cons, :over, 'pending')";
+                    (:grantID, :userID, :sessionID, :bookingID, :amount, :type, :desc, :base, :cons, :over, :status)";
 
         $stmt = $this->db->prepare($sql);
         return $stmt->execute([
@@ -27,17 +27,16 @@ class GrantTransaction {
             ':desc'      => $desc,
             ':base'      => $base,
             ':cons'      => $cons,
-            ':over'      => $over
+            ':over'      => $over,
+            ':status'    => $status
         ]);
     }
-
 
     public function getTransactionById($id) {
         $stmt = $this->db->prepare("SELECT * FROM GrantTransactions WHERE transactionID = :id");
         $stmt->execute([':id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
 
     public function getPendingByPI($piID) {
         $sql = "SELECT gt.*, g.grantName, u.userName 
@@ -50,7 +49,6 @@ class GrantTransaction {
         $stmt->execute([':piID' => $piID]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
 
     public function getRecentByPI($piID) {
         $sql = "SELECT gt.*, g.grantName, u.userName 

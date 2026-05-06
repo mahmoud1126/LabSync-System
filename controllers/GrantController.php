@@ -4,6 +4,7 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Grant.php';
 require_once __DIR__ . '/../models/GrantTransaction.php';
 require_once __DIR__ . '/../models/FacultyPI.php';
+require_once __DIR__ . '/../modules/billing/GrantReallocation.php';
 
 class GrantController extends BaseController {
     private $grantModel;
@@ -11,16 +12,15 @@ class GrantController extends BaseController {
     private $piModel;
 
     public function __construct() {
-        $this->requireRole(['faculty_pi']);
         $this->grantModel = new Grant();
         $this->transactionModel = new GrantTransaction();
         $this->piModel = new FacultyPI();
     }
 
     public function dashboard() {
+        $this->requireRole(['faculty_pi']);
         $piID = $this->getCurrentUserID();
         
-        // We pass the data into an array that matches the variable names in the view
         $data = [
             'title' => 'Financial Overview',
             'pendingTransactions' => $this->piModel->getPendingTransactions($piID),
@@ -28,49 +28,37 @@ class GrantController extends BaseController {
             'recentActivity'      => $this->transactionModel->getRecentByPI($piID) 
         ];
         
-        $this->view('pi/grant_dashboard', $this->withSection('finance', $data));
+        // Updated path to 'pages'
+        $this->view('grants/PI_Dashboard', $this->withSection('finance', $data));
     }
 
-    public function handleAction() {
-        if (!$this->isPost()) $this->redirect('/grant/dashboard');
+    public function reallocate() {
+        $this->requireRole(['lab_manager']);
+        if (!$this->isPost()) $this->redirect('/grants');
 
-        $transactionID = $this->getPost('transactionID');
-        $action        = $this->getPost('action');
-        $piID          = $this->getCurrentUserID();
+        $sourceID = $this->getPost('sourceGrantID');
+        $destID = $this->getPost('destGrantID');
+        $amount = (float)$this->getPost('amount');
+        $userID = $this->getCurrentUserID();
 
-        if (!$this->piModel->isAssignedToTransaction($piID, $transactionID)) {
-            $this->setFlash('error', 'Unauthorized: Management rights missing.');
-            $this->redirect('/grant/dashboard');
+        // Validation to prevent logic errors
+        if ($sourceID == $destID) {
+            $_SESSION['reallocation_error'] = "Source and Destination grants cannot be the same.";
+            $this->redirect('/grants');
+            return;
         }
 
-        $transaction = $this->transactionModel->getTransactionById($transactionID);
-
-        if ($action === 'approve') {
-            $this->approve($transaction);
-        } elseif ($action === 'reject') {
-            $this->reject($transaction);
-        }
-
-        $this->redirect('/grant/dashboard');
-    }
-
-    private function approve($transaction) {
-        $id = $transaction['transactionID'];
-        if ($this->transactionModel->updateStatus($id, 'approved')) {
-            $this->logAction('UPDATE', 'GrantTransactions', "Manual PI Approval", $id, 'pending', 'approved');
-            $this->setFlash('success', "Transaction #$id approved.");
-        }
-    }
-
-    private function reject($transaction) {
-        $id = $transaction['transactionID'];
-        // Ensure this method exists in your Grant.php model
-        $this->grantModel->refundToBalance($transaction['grantID'], $transaction['amountDeducted']);
+        require_once __DIR__ . '/../modules/billing/GrantReallocation.php';
+        $reallocationService = new GrantReallocation();
         
-        if ($this->transactionModel->updateStatus($id, 'rejected')) {
-            $this->logAction('UPDATE', 'GrantTransactions', "PI Rejected", $id, 'pending', 'rejected');
-            $this->setFlash('warning', "Transaction rejected. Funds returned to grant.");
+        if ($reallocationService->reallocate($sourceID, $destID, $amount, $userID)) {
+            // Bypass setFlash and explicitly use standard session variables
+            $_SESSION['reallocation_success'] = "Reallocation successfully executed: " . number_format($amount, 2) . " EGP.";
+        } else {
+            $_SESSION['reallocation_error'] = "Reallocation failed. Check balances and active status.";
         }
+
+        $this->redirect('/grants');
     }
 
     public function index() {
@@ -78,20 +66,17 @@ class GrantController extends BaseController {
         $role = $this->getCurrentUserRole();
         $userID = $this->getCurrentUserID();
 
-        require_once __DIR__ . '/../models/Grant.php';
-        $grantModel = new Grant();
-
         if ($role === 'lab_manager') {
-            $data['grants'] = $grantModel->getAllGrants();
+            $data['grants'] = $this->grantModel->getAllGrants();
+            $data['activeGrants'] = $this->grantModel->getActiveGrants(); 
             return $this->view('grants/LabManagerGrantPage', $data);
         } 
         elseif ($role === 'faculty_pi') {
-            $data['grants'] = $grantModel->getGrantsByPI($userID);
+            $data['grants'] = $this->grantModel->getGrantsByPI($userID);
             return $this->view('grants/PIGrantPage', $data);
         } 
         else {
-            // Researchers and Guest Researchers
-            $data['grants'] = $grantModel->getGrantsByResearcher($userID);
+            $data['grants'] = $this->grantModel->getGrantsByResearcher($userID);
             return $this->view('grants/ResearcherAndGuestResearcherGrantPage', $data);
         }
     }
