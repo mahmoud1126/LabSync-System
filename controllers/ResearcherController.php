@@ -1,28 +1,34 @@
 <?php
 
-require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Researcher.php';
+require_once __DIR__ . '/../models/Booking.php';
 
 class ResearcherController extends BaseController {
     private $researcherModel;
+    private $bookingModel;
 
     public function __construct() {
-        // Ensure only researchers or guest researchers can access
-        $this->requireRole(['researcher', 'guest_researcher']); 
+        $this->requireRole(['researcher', 'guest_researcher']);
         $this->researcherModel = new Researcher();
+        $this->bookingModel = new Booking();
     }
 
-    public function myGrants() {
+    public function index() {
         $userID = $this->getCurrentUserID();
-        
-        // Using the methods you provided in Researcher.php
+        $user = $this->getCurrentUser();
+        $role = $this->getCurrentUserRole();
+
         $data = [
-            'title' => 'My Funding & Spending',
+            'title' => 'Researcher Dashboard',
+            'userName' => $user['userName'] ?? 'Researcher',
+            'currentRole' => $role,
+            'currentUser' => $user,
+            'totalSpent' => $this->researcherModel->getResearcherTotalSpending($userID),
             'assignedGrants' => $this->researcherModel->getResearcherGrants($userID),
-            'myTransactions' => $this->researcherModel->getResearcherTransactions($userID),
-            'totalSpent' => $this->researcherModel->getResearcherTotalSpending($userID)
+            'recentBookings' => $this->bookingModel->getBookingsByUserId($userID)
         ];
 
-        $this->view('researcher/my_grants', $data);
+        $this->view('Researcher/ResearcherDashboard', $data);
     }
 }

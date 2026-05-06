@@ -1,35 +1,39 @@
 <?php
 
-
 class BaseController
 {
-    
-protected function view($viewPath, $data = []){
-    $data['flash'] = $this->getFlash();
+    /**
+     * Renders a view file and passes data to it.
+     */
+    protected function view($viewPath, $data = []) {
+        $data['flash'] = $this->getFlash();
 
-    if (isset($_SESSION['user'])) {
-        $data['currentUser'] = $this->getCurrentUser();
-        $data['currentRole'] = $this->getCurrentUserRole();
+        if (isset($_SESSION['user'])) {
+            $data['currentUser'] = $this->getCurrentUser();
+            $data['currentRole'] = $this->getCurrentUserRole();
+        } else {
+            $data['currentUser'] = null;
+            $data['currentRole'] = null;
+        }
+
+        // The "magic" that makes array keys like 'totalSpent' available as $totalSpent in the HTML
+        extract($data);
+
+        // Your structure uses the 'pages' directory for view files
+        $viewFile = __DIR__ . '/../pages/' . $viewPath . '.php';
+
+        if (!file_exists($viewFile)) {
+            // Updated error message to accurately reflect the 'pages' directory
+            die("⚠️ LabSync Error: View Not Found: pages/{$viewPath}.php");
+        }
+
+        require_once $viewFile;
     }
-    else {
-        $data['currentUser'] = null;
-        $data['currentRole'] = null;
-    }
 
-    extract($data);
-
-    $viewFile = __DIR__ . '/../pages/' . $viewPath . '.php';
-
-    if (!file_exists($viewFile)) {
-        die("⚠️ LabSync Error: View Not Found: views/{$viewPath}.php");
-    }
-
-    require_once $viewFile;
-}
-
-    protected function redirect($url)
-    {
-       
+    /**
+     * Redirects to a internal URL within the system.
+     */
+    protected function redirect($url) {
         $basePath = '/LabSync-System';
 
         if (strpos($url, $basePath) !== 0) {
@@ -37,12 +41,13 @@ protected function view($viewPath, $data = []){
         }
 
         header("Location: $url");
-
         exit;
     }
 
-
-    protected function requireLogin(): bool{
+    /**
+     * Ensures the user is logged in before proceeding.
+     */
+    protected function requireLogin(): bool {
         if (!isset($_SESSION['user'])) {
             $this->setFlash('error', 'Please log in to access this page.');
             $this->redirect('/login');
@@ -50,21 +55,31 @@ protected function view($viewPath, $data = []){
         return true;
     }
 
-    protected function getCurrentUser(){
+    /**
+     * Gets the currently logged-in user data.
+     */
+    protected function getCurrentUser() {
         return $_SESSION['user'] ?? null;
     }
 
-
-    protected function getCurrentUserID()    {
+    /**
+     * Gets the current user's ID.
+     */
+    protected function getCurrentUserID() {
         return $_SESSION['user']['userID'] ?? null;
     }
 
-    protected function getCurrentUserRole(){
+    /**
+     * Gets the current user's role (matches your header logic).
+     */
+    protected function getCurrentUserRole() {
         return $_SESSION['user']['userType'] ?? null;
     }
 
-
-    protected function requireRole($allowedRoles){
+    /**
+     * Enforces role-based access control.
+     */
+    protected function requireRole($allowedRoles) {
         $this->requireLogin();
 
         if (!is_array($allowedRoles)) {
@@ -76,14 +91,14 @@ protected function view($viewPath, $data = []){
         if (!in_array($currentRole, $allowedRoles)) {
             http_response_code(403);
 
+            // Attempt to find a custom 403 error page
             $errorPage = __DIR__ . '/../views/errors/403.php';
 
             if (file_exists($errorPage)) {
                 $message = 'Access Denied: Your role does not have permission for this action.';
                 $requiredRoles = $allowedRoles;
                 require_once $errorPage;
-            } 
-            else {
+            } else {
                 echo "<h1>403 Forbidden</h1>";
                 echo "<p>Access Denied: Your role does not have permission for this action.</p>";
                 echo "<p>Required roles: " . implode(', ', $allowedRoles) . "</p>";
@@ -93,8 +108,10 @@ protected function view($viewPath, $data = []){
         }
     }
 
-    protected function hasRole($roles)
-    {
+    /**
+     * Checks if the user has a specific role without exiting.
+     */
+    protected function hasRole($roles) {
         if (!$this->requireLogin()) {
             return false;
         }
@@ -106,11 +123,10 @@ protected function view($viewPath, $data = []){
         return in_array($this->getCurrentUserRole(), $roles);
     }
 
-
-
-    protected function requireSafetyBriefing()
-    {
-
+    /**
+     * Ensures the researcher has acknowledged safety protocols.
+     */
+    protected function requireSafetyBriefing() {
         $this->requireLogin();
 
         $userID = $this->getCurrentUserID();
@@ -125,11 +141,14 @@ protected function view($viewPath, $data = []){
         }
     }
 
-    protected function checkGuestExpiry(){
+    /**
+     * Checks if a guest researcher's access has expired.
+     */
+    protected function checkGuestExpiry() {
         $this->requireLogin();
         $user = $this->getCurrentUser();
 
-        if($user['userType'] !== 'guest_researcher') {
+        if ($user['userType'] !== 'guest_researcher') {
             return;
         }
 
@@ -143,7 +162,7 @@ protected function view($viewPath, $data = []){
             return;
         }
 
-      $expired = strtotime($guest['expirationDate']) <= time();
+        $expired = strtotime($guest['expirationDate']) <= time();
         $inactive = $guest['userStatus'] !== 'active';
 
         if ($expired || $inactive) {
@@ -155,38 +174,40 @@ protected function view($viewPath, $data = []){
             session_start(); 
             $this->setFlash('error', 'Your guest access has expired. Please contact the Lab Manager.');
             $this->redirect('/login');
-            
         }
     }
 
+    /**
+     * Logs an action to the audit trail.
+     */
+    protected function logAction($actionType, $tableAffected, $description = '', $recordID = null, $oldValue = null, $newValue = null) {
+        require_once __DIR__ . '/../models/AuditLog.php';
+        $auditLog = new AuditLog();
+        $auditLog->log(
+            $this->getCurrentUserID(),
+            $actionType,
+            $tableAffected,
+            $recordID,
+            $oldValue,
+            $newValue,
+            $description
+        );
+    }
 
-   protected function logAction($actionType, $tableAffected, $description = '', $recordID = null, $oldValue = null, $newValue = null)
-{
-    require_once __DIR__ . '/../models/AuditLog.php';
-    $auditLog = new AuditLog();
-    $auditLog->log(
-        $this->getCurrentUserID(),
-        $actionType,
-        $tableAffected,
-        $recordID,
-        $oldValue,
-        $newValue,
-        $description
-    );
-}
-
-
-
-    protected function setFlash($type, $message)
-    {
+    /**
+     * Sets a session flash message.
+     */
+    protected function setFlash($type, $message) {
         $_SESSION['flash'] = [
             'type'    => $type,
             'message' => $message
         ];
     }
 
-    protected function getFlash()
-    {
+    /**
+     * Gets and clears the session flash message.
+     */
+    protected function getFlash() {
         if (isset($_SESSION['flash'])) {
             $flash = $_SESSION['flash'];
             unset($_SESSION['flash']); 
@@ -195,34 +216,37 @@ protected function view($viewPath, $data = []){
         return null;
     }
 
-
-
-    protected function withSection($section, $data = []){
+    /**
+     * Adds section context to the data array.
+     */
+    protected function withSection($section, $data = []) {
         $data['activeSection'] = $section;
         return $data;
     }
 
-
-    protected function withModal($modalID, $data = [])
-    {
+    /**
+     * Adds modal context to the data array.
+     */
+    protected function withModal($modalID, $data = []) {
         $data['activeModal'] = $modalID;
         return $data;
     }
 
-
-
-    protected function getPost($key, $default = null)
-    {
+    /**
+     * Retrieves and sanitizes POST data.
+     */
+    protected function getPost($key, $default = null) {
         if (isset($_POST[$key])) {
             $value = $_POST[$key];
-            // Trim strings, leave other types alone
             return is_string($value) ? trim($value) : $value;
         }
         return $default;
     }
 
-    protected function getQuery($key, $default = null)
-    {
+    /**
+     * Retrieves and sanitizes GET query data.
+     */
+    protected function getQuery($key, $default = null) {
         if (isset($_GET[$key])) {
             $value = $_GET[$key];
             return is_string($value) ? trim($value) : $value;
@@ -230,7 +254,10 @@ protected function view($viewPath, $data = []){
         return $default;
     }
 
-    protected function isPost(){
+    /**
+     * Checks if the request method is POST.
+     */
+    protected function isPost() {
         return $_SERVER['REQUEST_METHOD'] === 'POST';
     }
 }

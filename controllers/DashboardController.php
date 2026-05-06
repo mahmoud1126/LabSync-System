@@ -1,27 +1,24 @@
 <?php
+
 require_once __DIR__ . '/../core/Controller.php';
-require_once __DIR__ . '/../models/Users.php';
-require_once __DIR__ . '/../models/IncidentLog.php';
-
-
-class UserModel extends User { public function getRole() { return $_SESSION['userType']; } }
+require_once __DIR__ . '/../models/Researcher.php';
+require_once __DIR__ . '/../models/Booking.php';
 
 class DashboardController extends BaseController {
-    private $userModel;
-    private $incidentModel;
-
-    public function __construct() {
-        $this->userModel = new UserModel();
-        $this->incidentModel = new IncidentLog();
-    }
 
     public function index() {
         $this->requireLogin();
-        $role = $this->getCurrentUserRole();
         
+        $role = $this->getCurrentUserRole();
+        $userID = $this->getCurrentUserID();
+        $user = $this->getCurrentUser();
+
+        // These keys MUST match the variables used in the view exactly
         $data = [
             'title' => 'LabSync Dashboard',
-            'user' => $this->getCurrentUser()
+            'userName' => $user['userName'] ?? 'Researcher',
+            'currentRole' => $role,
+            'currentUser' => $user
         ];
 
         switch ($role) {
@@ -31,10 +28,17 @@ class DashboardController extends BaseController {
                 return $this->view('pi/dashboard', $data); 
             case 'researcher':
             case 'guest_researcher':
-                return $this->view('researcher/dashboard', $data); 
+                $researcherModel = new Researcher();
+                $bookingModel = new Booking();
+
+                // Fetching data from your specific Researcher model methods
+                $data['totalSpent'] = $researcherModel->getResearcherTotalSpending($userID);
+                $data['assignedGrants'] = $researcherModel->getResearcherGrants($userID);
+                $data['recentBookings'] = $bookingModel->getBookingsByUserId($userID);
+
+                return $this->view('Researcher/ResearcherDashboard', $data); 
             default:
                 $this->redirect('/login');
         }
     }
-
 }
