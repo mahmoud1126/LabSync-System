@@ -28,6 +28,12 @@ $router->post('/equipment/update/{id}', 'EquipmentController', 'update');
 $router->post('/EquipmentController/book', 'EquipmentController', 'book');
 $router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
 
+// --- BOOKINGS ---
+// --- BOOKINGS ---
+$router->get('/bookings', 'BookingController', 'index'); // ADD THIS LINE
+$router->get('/booking/index', 'BookingController', 'index');
+$router->post('/booking/store', 'BookingController', 'store');
+
 // --- ADMIN ---
 $router->get('/admin', 'AdminController', 'index');
 $router->get('/admin/users',                    'AdminController', 'users');

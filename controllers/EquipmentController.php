@@ -6,10 +6,12 @@ require_once __DIR__ . '/../modules/module3/SecurityClearance.php';
 class EquipmentController extends BaseController {
     private $equipmentModel;
     private $clearanceModule;
+    private $userModel;
 
     public function __construct() {
         $this->equipmentModel = new Equipment();
         $this->clearanceModule = new SecurityClearance();
+        $this->userModel = new Researcher();
     }
 
 
@@ -36,9 +38,10 @@ class EquipmentController extends BaseController {
         $allEquipment = [];
     }
 
-    $this->view('researcher/equipment', [
-        'equipment' => $allEquipment,
-        'userRole' => $userRole
+    $this->view('Researcher/ResearcherEquipment', [
+        'equipments' => $allEquipment,
+        'userRole' => $userRole,
+        'user' => $this->userModel->getUserByID($userID)
     ]);
 }
 

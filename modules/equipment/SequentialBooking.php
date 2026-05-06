@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../models/Booking.php';
-require_once __DIR__ . '/../models/Equipment.php';
-require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../../models/Booking.php';   // Line 3
+require_once __DIR__ . '/../../models/Equipment.php'; // Line 4
+require_once __DIR__ . '/../../config/Database.php';  // Line 5
 
 class SequentialBookingService {
 

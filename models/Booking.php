@@ -143,18 +143,18 @@ class Booking {
         return $count > 0;
     }
 
-    public function getAllFutureBookings() {
-        // Changed b.status to b.bookingStatus
-        $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.bookingStatus != 'cancelled' ORDER BY b.startTime ASC");
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+        public function getAllFutureBookings() {
+            // Changed b.status to b.bookingStatus
+            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.bookingStatus != 'cancelled' ORDER BY b.startTime ASC");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
 
-    public function getBookingsByUserId($userID) {
-        // Changed b.status to b.bookingStatus
-        $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id AND b.bookingStatus != 'cancelled' ORDER BY b.startTime DESC");
-        $stmt->execute([':id' => $userID]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        public function getBookingsByUserId($userID) {
+            // Changed b.status to b.bookingStatus
+            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id AND b.bookingStatus != 'cancelled' ORDER BY b.startTime DESC");
+            $stmt->execute([':id' => $userID]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
     }
-}
 ?>
