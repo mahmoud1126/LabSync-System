@@ -45,7 +45,7 @@ class ComplianceController extends BaseController
             'labManagerID' => (int) $this->getPost('labManagerID')
         ];
 
-        require_once __DIR__ . '/../modules/compliance/SupervisedSession.php';
+        require_once __DIR__ . '/../modules/module3/SupervisedSession.php';
         $supervisedSession = new SupervisedSession();
         $result = $supervisedSession->requestSupervision($data);
 
@@ -78,7 +78,7 @@ class ComplianceController extends BaseController
             'labManagerID' => $this->getCurrentUserID()
         ];
 
-        require_once __DIR__ . '/../modules/compliance/SupervisedSession.php';
+        require_once __DIR__ . '/../modules/module3/SupervisedSession.php';
         $supervisedSession = new SupervisedSession();
         $result = $supervisedSession->approveSupervision($data);
 
@@ -108,7 +108,7 @@ class ComplianceController extends BaseController
             'reason'       => $this->getPost('reason')
         ];
 
-        require_once __DIR__ . '/../modules/compliance/SupervisedSession.php';
+        require_once __DIR__ . '/../modules/module3/SupervisedSession.php';
         $supervisedSession = new SupervisedSession();
         $result = $supervisedSession->rejectSupervision($data);
 
@@ -134,7 +134,7 @@ class ComplianceController extends BaseController
 
         $equipmentID = (int) $this->getQuery('equipmentID');
 
-        require_once __DIR__ . '/../modules/compliance/HazmatAlert.php';
+        require_once __DIR__ . '/../modules/module3/HazmatAlert.php';
         $hazmatAlert = new HazmatAlert();
         $result = $hazmatAlert->displayAlert(['equipmentID' => $equipmentID]);
 
@@ -158,7 +158,7 @@ class ComplianceController extends BaseController
             'equipmentID' => (int) $this->getPost('equipmentID')
         ];
 
-        require_once __DIR__ . '/../modules/compliance/HazmatAlert.php';
+        require_once __DIR__ . '/../modules/module3/HazmatAlert.php';
         $hazmatAlert = new HazmatAlert();
         $result = $hazmatAlert->acknowledgeWarning($data);
 

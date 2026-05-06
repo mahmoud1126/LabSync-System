@@ -61,11 +61,18 @@ class Booking {
     }
 
     public function getBookingsByStatus($status) {
-        $sql = "SELECT * FROM Bookings WHERE bookingStatus = :status ORDER BY startTime ASC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':status' => $status]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
+    $sql = "SELECT b.*, 
+                   u.userName,
+                   e.equipmentName
+            FROM Bookings b
+            JOIN Users u ON b.userID = u.userID
+            JOIN Equipment e ON b.equipmentID = e.equipmentID
+            WHERE b.bookingStatus = :status 
+            ORDER BY b.startTime ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':status' => $status]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
 
 

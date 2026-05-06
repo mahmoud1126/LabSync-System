@@ -42,7 +42,7 @@
                                 <?php foreach ($bookings as $b): ?>
                                     <tr>
                                         <td><?= (int) $b['bookingID'] ?></td>
-                                        <td><?= htmlspecialchars($b['UserName']) ?></td>
+                                        <td><?= htmlspecialchars($b['userName'] ?? $b['user_name'] ?? 'N/A') ?></td>
                                         <td><?= htmlspecialchars($b['equipmentName']) ?></td>
                                         <td><?= htmlspecialchars($b['startTime']) ?></td>
                                         <td><?= htmlspecialchars($b['endTime']) ?></td>
