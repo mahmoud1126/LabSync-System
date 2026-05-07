@@ -50,11 +50,16 @@ class Booking {
 
 
     public function getBookingById($bookingID) {
-        $sql = "SELECT * FROM Bookings WHERE bookingID = :id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':id' => $bookingID]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+    // JOIN with Equipment table to get the equipmentName
+    $sql = "SELECT b.*, e.equipmentName 
+            FROM Bookings b 
+            JOIN Equipment e ON b.equipmentID = e.equipmentID 
+            WHERE b.bookingID = :id";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute([':id' => $bookingID]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
     public function getAllBookings() {
         $sql="SELECT * FROM Bookings ORDER BY startTime DESC";

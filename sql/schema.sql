@@ -63,6 +63,8 @@ CREATE TABLE Equipment (
     equipmentName VARCHAR(200) NOT NULL,
 
     equipmentStatus ENUM('available', 'in_use', 'locked_out', 'under_maintenance', 'calibration_needed') DEFAULT 'available',
+    
+    equipmentDescription TEXT NULL,
 
     requiredClearanceLevel INT DEFAULT 0,
 

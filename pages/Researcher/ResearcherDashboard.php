@@ -85,7 +85,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="/LabSync-System/booking/view?id=<?= $booking['bookingID'] ?>" class="btn btn-outline-primary btn-sm">Details</a>
+                                    <a href="/LabSync-System/booking/view?id=<?= $booking['bookingID'] ?>" class="btn btn-link btn-sm text-decoration-none border-0 fw-bold">Details</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

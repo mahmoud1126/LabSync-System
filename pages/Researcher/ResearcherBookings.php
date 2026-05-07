@@ -10,10 +10,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <h2 class="fw-bold text-dark mb-1">My Booked Sessions</h2>
             <p class="text-muted small">Manage your upcoming research reservations</p>
         </div>
-        <a href="/LabSync-System/equipment" class="btn btn-primary btn-sm shadow-sm">
-            <i class="bi bi-plus-lg me-1"></i> New Booking
-        </a>
-    </div>
+        </div>
 
     <div class="card shadow-sm border-0" style="border-radius: 12px; overflow: hidden;">
         <div class="card-body p-0">
@@ -36,7 +33,6 @@ require_once __DIR__ . '/../../includes/header.php';
                                     <div class="py-4">
                                         <i class="bi bi-calendar-x mb-3 text-muted" style="font-size: 2.5rem;"></i>
                                         <p class="text-muted mb-0">You don't have any upcoming bookings.</p>
-                                        <small><a href="/LabSync-System/equipment">Browse equipment to get started.</a></small>
                                     </div>
                                 </td>
                             </tr>
@@ -70,8 +66,12 @@ require_once __DIR__ . '/../../includes/header.php';
                                         </span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-outline-danger btn-sm border-0" title="Cancel Booking">
-                                            <i class="bi bi-trash3"></i>
+                                        <button type="button" 
+                                                class="btn btn-link text-danger text-decoration-none btn-sm p-0 border-0 fw-bold" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#cancelModal" 
+                                                data-id="<?= $booking['bookingID'] ?>">
+                                            Remove
                                         </button>
                                     </td>
                                 </tr>
@@ -83,3 +83,39 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-dark">Confirm Removal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-muted">
+                Are you sure you want to remove this booking? This action will set the status to <span class="text-danger fw-bold">Cancelled</span> and cannot be undone.
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Keep It</button>
+                <form id="cancelForm" action="" method="POST">
+                    <button type="submit" class="btn btn-danger px-4 shadow-sm">Confirm Removal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cancelModal = document.getElementById('cancelModal');
+        if (cancelModal) {
+            cancelModal.addEventListener('show.bs.modal', event => {
+                const button = event.relatedTarget;
+                const bookingID = button.getAttribute('data-id');
+                const form = document.getElementById('cancelForm');
+                form.action = '/LabSync-System/booking/cancel/' + bookingID;
+            });
+        }
+    });
+</script>
+
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

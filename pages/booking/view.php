@@ -1,6 +1,11 @@
 <?php 
 /** @var array $booking */
 require_once __DIR__ . '/../../includes/header.php'; 
+
+// Fallback logic in case the join was missed in the controller
+$equipmentName = $booking['equipmentName'] ?? $booking['name'] ?? 'Equipment Name Not Found';
+$cost = $booking['cost'] ?? $booking['estimatedCost'] ?? 0;
+$status = $booking['status'] ?? $booking['bookingStatus'] ?? 'pending';
 ?>
 
 <div class="container py-4">
@@ -28,7 +33,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-sm-4 text-muted">Equipment</div>
-                        <div class="col-sm-8 fw-bold"><?= htmlspecialchars($booking['equipmentName']) ?></div>
+                        <div class="col-sm-8 fw-bold text-primary"><?= htmlspecialchars($equipmentName) ?></div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-sm-4 text-muted">Time Slot</div>
@@ -43,9 +48,9 @@ require_once __DIR__ . '/../../includes/header.php';
                         <div class="col-sm-4 text-muted">Current Status</div>
                         <div class="col-sm-8">
                             <span class="badge rounded-pill 
-                                <?= $booking['status'] === 'pending' ? 'bg-warning text-dark' : 
-                                   ($booking['status'] === 'approved' ? 'bg-success' : 'bg-danger') ?>">
-                                <?= ucfirst($booking['status']) ?>
+                                <?= $status === 'pending' ? 'bg-warning text-dark' : 
+                                    ($status === 'approved' ? 'bg-success' : 'bg-danger') ?>">
+                                <?= ucfirst($status) ?>
                             </span>
                         </div>
                     </div>
@@ -57,7 +62,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="card border-0 shadow-sm bg-primary text-white">
                 <div class="card-body py-4">
                     <h6 class="text-white-50 text-uppercase small fw-bold">Estimated Cost</h6>
-                    <h2 class="mb-0"><?= number_format($booking['cost'] ?? 0, 2) ?> EGP</h2>
+                    <h2 class="mb-0"><?= number_format($cost, 2) ?> EGP</h2>
                     <hr class="text-white-50">
                     <p class="small mb-0">Note: Final deduction occurs after lab manager approval.</p>
                 </div>
