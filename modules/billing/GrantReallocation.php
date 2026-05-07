@@ -1,7 +1,7 @@
 <?php
 
-require_once __DIR__ . '/../models/Grant.php';
-require_once __DIR__ . '/../models/GrantTransaction.php';
+require_once __DIR__ . '/../../models/Grant.php';
+require_once __DIR__ . '/../../models/GrantTransaction.php';
 
 class GrantReallocation {
 
@@ -27,20 +27,24 @@ class GrantReallocation {
             $added = $this->grantModel->refundToBalance($destinationID, $amount);
 
             if ($added) {
+                // Log the deduction with 'approved' status
                 $this->transactionModel->createTransaction(
                     $sourceID,
                     $userID,
                     $amount,
                     'reallocation_out',
-                    "Funds transferred to Grant ID: $destinationID"
+                    "Funds transferred to Grant ID: $destinationID",
+                    0, 0, 0, null, null, 'approved'
                 );
 
+                // Log the addition with 'approved' status
                 $this->transactionModel->createTransaction(
                     $destinationID,
                     $userID,
                     $amount,
                     'reallocation_in',
-                    "Funds received from Grant ID: $sourceID"
+                    "Funds received from Grant ID: $sourceID",
+                    0, 0, 0, null, null, 'approved'
                 );
 
                 return true;

@@ -65,6 +65,7 @@ function isActive($page, $current) {
                        Grants
                     </a>
                 </li>
+                <?php if ($userRole === 'lab_manager'): ?>
                 <li class="nav-item">
                     <a class="nav-link nav-link-custom <?= isActive('incidents', $currentPage) ?>"
                        href="/LabSync-System/incidents">
@@ -80,18 +81,8 @@ function isActive($page, $current) {
                     </a>
                 </li>
                 <?php endif; ?>
-
-                <?php if (in_array($userRole, ['lab_manager'])): ?>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-custom <?= isActive('admin', $currentPage) ?>"
-                       href="/LabSync-System/admin">
-                       Admin
-                    </a>
-                </li>
-                <?php endif; ?>
             </ul>
 
-            <!-- Right side: user only -->
             <div class="d-flex align-items-center gap-3">
 
                 <?php if ($userName): ?>

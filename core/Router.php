@@ -129,5 +129,11 @@ class Router
     {
         http_response_code(404);
         $errorPage = __DIR__ . '/../views/errors/404.php';
+        
+        if (file_exists($errorPage)) {
+            require_once $errorPage;
+        } else {
+            die("<h2 style='color:red;'>404 Not Found</h2><p>The route <b>'{$url}'</b> is not defined in routes.php</p>");
+        }
     }
 }

@@ -1,4 +1,7 @@
-<?php require_once __DIR__ . '/../../../includes/header.php'; ?>
+<?php 
+/** @var array $equipment */
+require_once __DIR__ . '/../../../includes/header.php'; 
+?>
 
 <main>
     <div class="container">
@@ -26,11 +29,9 @@
         <?php endif; ?>
 
         <div class="row g-4">
-
-
             <div class="col-md-6">
-                <div class="card h-100">
-                    <div class="card-header">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">
                         <i class="bi bi-info-circle"></i> Equipment Details
                     </div>
                     <div class="card-body">
@@ -83,11 +84,9 @@
                 </div>
             </div>
 
-
             <div class="col-md-6">
-
-                <div class="card mb-4">
-                    <div class="card-header">
+                <div class="card mb-4 shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">
                         <i class="bi bi-arrow-repeat"></i> Update Status
                     </div>
                     <div class="card-body">
@@ -95,11 +94,11 @@
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Equipment Status</label>
                                 <select class="form-select" name="equipmentStatus" required>
-                                    <option value="available"           <?= $equipment['equipmentStatus'] === 'available' ? 'selected' : '' ?>>Available</option>
-                                    <option value="in_use"              <?= $equipment['equipmentStatus'] === 'in_use' ? 'selected' : '' ?>>In Use</option>
-                                    <option value="calibration_needed"  <?= $equipment['equipmentStatus'] === 'calibration_needed' ? 'selected' : '' ?>>Calibration Needed</option>
-                                    <option value="under_maintenance"   <?= $equipment['equipmentStatus'] === 'under_maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
-                                    <option value="locked_out"          <?= $equipment['equipmentStatus'] === 'locked_out' ? 'selected' : '' ?>>Locked Out</option>
+                                    <option value="available" <?= $equipment['equipmentStatus'] === 'available' ? 'selected' : '' ?>>Available</option>
+                                    <option value="in_use" <?= $equipment['equipmentStatus'] === 'in_use' ? 'selected' : '' ?>>In Use</option>
+                                    <option value="calibration_needed" <?= $equipment['equipmentStatus'] === 'calibration_needed' ? 'selected' : '' ?>>Calibration Needed</option>
+                                    <option value="under_maintenance" <?= $equipment['equipmentStatus'] === 'under_maintenance' ? 'selected' : '' ?>>Under Maintenance</option>
+                                    <option value="locked_out" <?= $equipment['equipmentStatus'] === 'locked_out' ? 'selected' : '' ?>>Locked Out</option>
                                 </select>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">
@@ -109,9 +108,8 @@
                     </div>
                 </div>
 
-
-                <div class="card">
-                    <div class="card-header">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold">
                         <i class="bi bi-currency-dollar"></i> Update Hourly Rate
                     </div>
                     <div class="card-body">
@@ -130,11 +128,8 @@
                         </form>
                     </div>
                 </div>
-
             </div>
-
         </div>
-
     </div>
 </main>
 

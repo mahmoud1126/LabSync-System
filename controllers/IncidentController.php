@@ -3,6 +3,15 @@
 require_once __DIR__ . "/../core/Controller.php" ;
 class IncidentController extends BaseController {
 
+    public function __construct() {
+        $this->requireLogin();
+        // Strictly allow only lab_manager. Redirect researchers and guests.
+        if ($this->getCurrentUserRole() !== 'lab_manager') {
+            $this->redirect('/dashboard');
+            exit();
+        }
+    }
+
     public function index(){
         $this->requireRole(['lab_manager']);
         

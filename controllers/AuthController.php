@@ -19,7 +19,23 @@ class AuthController extends BaseController
         if ($user) {
             $_SESSION['user'] = $user;
             $this->setFlash('success', 'Welcome, ' . $user['userName']);
-            $this->redirect('/incidents'); 
+            
+            $role = $user['role'] ?? ''; 
+
+            switch ($role) {
+                case 'lab_manager':
+                    $this->redirect('/incidents');
+                    break;
+                case 'pi':
+                    $this->redirect('/pi/dashboard');
+                    break;
+                case 'researcher':
+                    $this->redirect('/researcher/dashboard');
+                    break;
+                default:
+                    $this->redirect('/dashboard'); 
+                    break;
+            }
         } else {
             $this->setFlash('error', 'Invalid credentials.');
             $this->redirect('/login');
