@@ -72,6 +72,7 @@ function isActive($page, $current) {
                        Incidents
                     </a>
                 </li>
+                <?php endif; ?>
 
                 <?php if (in_array($userRole, ['lab_manager'])): ?>
                 <li class="nav-item">
