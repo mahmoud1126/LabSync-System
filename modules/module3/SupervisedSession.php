@@ -28,7 +28,7 @@ class SupervisedSession
         $bookingID    = (int) $data['bookingID'];
         $userID       = (int) $data['userID'];
         $labManagerID = (int) $data['labManagerID'];
-        
+
         $booking = $this->bookingModel->getBookingById($bookingID);
         if (!$booking) {
             return ['success' => false, 'message' => 'Booking not found.'];
@@ -82,10 +82,6 @@ class SupervisedSession
             return ['success' => false, 'message' => 'Booking not found.'];
         }
 
-        if ((int)$booking['labManagerID'] !== $labManagerID) {
-            return ['success' => false, 'message' => 'Unauthorized lab manager.'];
-        }
-
         $this->bookingModel->updateBookingStatus($bookingID, 'confirmed', $labManagerID);
 
         $sessionID = $this->sessionModel->startSession(
@@ -130,10 +126,6 @@ class SupervisedSession
         $booking = $this->bookingModel->getBookingById($bookingID);
         if (!$booking) {
             return ['success' => false, 'message' => 'Booking not found.'];
-        }
-
-        if ((int)$booking['labManagerID'] !== $labManagerID) {
-            return ['success' => false, 'message' => 'Unauthorized lab manager.'];
         }
 
         $this->bookingModel->cancelBooking($bookingID, $data['reason']);
