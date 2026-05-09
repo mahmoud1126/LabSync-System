@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Researcher.php';
 require_once __DIR__ . '/../models/Booking.php';
+require_once __DIR__ . '/../models/FacultyPi.php';
 
 class DashboardController extends BaseController {
 
@@ -13,7 +14,6 @@ class DashboardController extends BaseController {
         $userID = $this->getCurrentUserID();
         $user = $this->getCurrentUser();
 
-        // These keys MUST match the variables used in the view exactly
         $data = [
             'title' => 'LabSync Dashboard',
             'userName' => $user['userName'] ?? 'Researcher',
@@ -23,20 +23,25 @@ class DashboardController extends BaseController {
 
         switch ($role) {
             case 'lab_manager':
-                return $this->view('admin/index', $data);
+                $this->redirect('/admin');
+                break;
+
             case 'faculty_pi':
-                return $this->view('pi/dashboard', $data); 
+                // Redirect to the PIController's index method to properly load all dashboard data
+                $this->redirect('/pi'); 
+                break;
+
             case 'researcher':
             case 'guest_researcher':
                 $researcherModel = new Researcher();
                 $bookingModel = new Booking();
 
-                // Fetching data from your specific Researcher model methods
                 $data['totalSpent'] = $researcherModel->getResearcherTotalSpending($userID);
                 $data['assignedGrants'] = $researcherModel->getResearcherGrants($userID);
                 $data['recentBookings'] = $bookingModel->getBookingsByUserId($userID);
 
                 return $this->view('Researcher/ResearcherDashboard', $data); 
+
             default:
                 $this->redirect('/login');
         }

@@ -1,30 +1,40 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Booking.php';
+require_once __DIR__ . '/../models/Equipment.php'; // Required for Phase 1 Cost Calc
 require_once __DIR__ . '/../modules/equipment/SequentialBooking.php';
 
 class BookingController extends BaseController {
     private $bookingModel;
+    private $equipmentModel;
     private $sequentialService;
 
     public function __construct() {
         $this->bookingModel = new Booking();
+        $this->equipmentModel = new Equipment();
         $this->sequentialService = new SequentialBookingService();
     }
 
     public function index() {
-    $this->requireLogin();
-    $userID = $this->getCurrentUserID();
-    $role = $this->getCurrentUserRole();
+        $this->requireLogin();
+        $userID = $this->getCurrentUserID();
+        $role = $this->getCurrentUserRole();
 
-    if ($role === 'lab_manager') {
-        $bookings = $this->bookingModel->getAllFutureBookings();
-    } else {
-        $bookings = $this->bookingModel->getBookingsByUserId($userID);
+        $waitlistedBookings = [];
+
+        if ($role === 'lab_manager') {
+            $bookings = $this->bookingModel->getAllFutureBookings();
+            // Fetch the requests specifically for the Lab Manager
+            $waitlistedBookings = $this->bookingModel->getBookingsByStatus('waitlisted');
+        } else {
+            $bookings = $this->bookingModel->getBookingsByUserId($userID);
+        }
+
+        $this->view('booking/index', [
+            'bookings' => $bookings,
+            'waitlistedBookings' => $waitlistedBookings // Pass this to the view
+        ]);
     }
-
-    $this->view('booking/index', ['bookings' => $bookings]);
-}
 
     public function store() {
         header('Content-Type: application/json');
@@ -46,6 +56,7 @@ class BookingController extends BaseController {
         $grantID = $_POST['grantID'] ?? null;
 
         try {
+            // This will automatically create the booking as 'waitlisted' based on our model update!
             $result = $this->sequentialService->bookWithDependencies(
                 $userID, 
                 $equipmentID, 
@@ -56,7 +67,7 @@ class BookingController extends BaseController {
 
             echo json_encode([
                 'success' => $result['success'],
-                'message' => $result['success'] ? 'Booking successful!' : 'Conflict: This time slot is already taken.'
+                'message' => $result['success'] ? 'Booking waitlisted! Awaiting Lab Manager approval.' : 'Conflict: This time slot is already taken.'
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -67,13 +78,40 @@ class BookingController extends BaseController {
         exit();
     }
 
+    // NEW: Phase 1 Ops Approval
+    public function confirm($bookingID) {
+        $this->requireRole(['lab_manager']);
+        $booking = $this->bookingModel->getBookingById($bookingID);
+
+        if (!$booking) {
+            $this->setFlash('error', 'Booking not found.');
+            $this->redirect('/booking/index');
+            return;
+        }
+
+        // Calculate duration in hours
+        $start = new DateTime($booking['startTime']);
+        $end = new DateTime($booking['endTime']);
+        $diff = $end->diff($start);
+        $hours = $diff->h + ($diff->days * 24) + ($diff->i / 60);
+
+        // Run the Equipment Model cost calculation
+        $totalCost = $this->equipmentModel->calculateUsageCost($booking['equipmentID'], $hours);
+
+        // Save cost and move to Phase 2 (Confirmed)
+        $this->bookingModel->updateBookingWithCost($bookingID, 'confirmed', $totalCost, $this->getCurrentUserID());
+        
+        $this->setFlash('success', 'Booking ops confirmed. Total Cost ($' . number_format($totalCost, 2) . ') calculated and sent to PI.');
+        $this->redirect('/booking/index');
+    }
+
     public function cancel($bookingID) {
-        // Fixed: Using getCurrentUserID() and getCurrentUserRole() for consistency
         $userID = $this->getCurrentUserID();
         $role = $this->getCurrentUserRole();
         $booking = $this->bookingModel->getBookingById($bookingID);
 
         if ($role === 'lab_manager' || (isset($booking['userID']) && $booking['userID'] == $userID)) {
+            // Lab Manager uses this for Phase 1 rejection
             $this->bookingModel->updateBookingStatus($bookingID, 'cancelled');
             $this->setFlash('success', 'Booking cancelled successfully.');
         } else {
@@ -95,7 +133,7 @@ class BookingController extends BaseController {
             $this->redirect('/dashboard');
         }
 
-        // This calls the BaseController's view() method to render the page
         $this->view('booking/view', ['booking' => $booking]);
     }
 }
+?>

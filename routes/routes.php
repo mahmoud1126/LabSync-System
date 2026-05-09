@@ -28,16 +28,25 @@ $router->post('/equipment/update/{id}', 'EquipmentController', 'update');
 $router->post('/EquipmentController/book', 'EquipmentController', 'book');
 $router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
 
-// --- BOOKINGS ---
+// --- BOOKINGS & PHASE 1 APPROVALS ---
 $router->get('/bookings', 'BookingController', 'index');
 $router->get('/booking/index', 'BookingController', 'index');
 $router->post('/booking/store', 'BookingController', 'store');
 $router->post('/booking/cancel/{id}', 'BookingController', 'cancel');
 $router->get('/booking/view', 'BookingController', 'details');
+// NEW: Phase 1 Lab Manager Confirmation Route
+$router->post('/booking/confirm/{id}', 'BookingController', 'confirm');
 
-
+// --- GRANTS ---
 $router->get('/grants', 'GrantController', 'index');
 $router->post('/grants/reallocate', 'GrantController', 'reallocate');
+$router->get('/grants/add', 'GrantController', 'create');
+$router->post('/grants/store', 'GrantController', 'store');
+$router->get('/grants/assign', 'GrantController', 'assign');
+$router->post('/grants/processAssign', 'GrantController', 'processAssign');
+$router->post('/grants/delete', 'GrantController', 'delete');
+$router->get('/grants/manage', 'GrantController', 'manage');
+$router->post('/grants/updateAssignment', 'GrantController', 'updateAssignment');
 
 // --- ADMIN ---
 $router->get('/admin', 'AdminController', 'index');
@@ -59,9 +68,18 @@ $router->get('/admin/briefings',          'AdminController', 'briefings');
 $router->get('/admin/briefings/create',   'AdminController', 'createBriefing');
 $router->post('/admin/briefings/store',   'AdminController', 'storeBriefing');
 
-// --- PI ---
-$router->get('/pi/dashboard', 'PIController', 'index');
-$router->post('/pi/approve-transaction', 'PIController', 'approveTransaction');
+// --- PI (Financial & Administrative) & PHASE 2 APPROVALS ---
+$router->get('/pi', 'PIController', 'index');            
+$router->get('/PI', 'PIController', 'index');            
+$router->get('/pi/requests', 'PIController', 'requests');   
+$router->get('/PI/requests', 'PIController', 'requests');   
+$router->get('/pi/users', 'PIController', 'users');         
+$router->get('/PI/users', 'PIController', 'users');         
+$router->post('/pi/approve', 'PIController', 'approveTransaction');
+$router->post('/PI/approve', 'PIController', 'approveTransaction');
+$router->post('/PI/approveBooking', 'PIController', 'approveBooking');
+$router->post('/PI/rejectBooking', 'PIController', 'rejectBooking');
+$router->post('/PI/rejectTransactionList', 'PIController', 'rejectTransactionList');
 
 // --- COMPLIANCE ---
 $router->post('/compliance/requestSupervision',    'ComplianceController', 'requestSupervision');

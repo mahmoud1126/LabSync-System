@@ -12,6 +12,41 @@ class FacultyPI extends User {
         return 'faculty_pi';
     }
 
+    /**
+     * Creates a new Faculty PI in the Users table.
+     * Called by AdminController->storeUser()
+     */
+    public function createFacultyPI($userName, $userPassword, $clearanceLevel, $maxBookingHoursPerWeek) {
+        $sql = "INSERT INTO Users (
+                    userName, 
+                    userPassword, 
+                    userType, 
+                    userStatus, 
+                    clearanceLevel, 
+                    maxBookingHoursPerWeek, 
+                    isExternal
+                ) VALUES (
+                    :userName, 
+                    :userPassword, 
+                    'faculty_pi', 
+                    'active', 
+                    :clearance, 
+                    :maxHours, 
+                    0
+                )";
+
+        $stmt = $this->db->prepare($sql);
+        
+        $stmt->execute([
+            ':userName'     => $userName,
+            ':userPassword' => password_hash($userPassword, PASSWORD_DEFAULT),
+            ':clearance'    => $clearanceLevel,
+            ':maxHours'     => $maxBookingHoursPerWeek
+        ]);
+
+        return $this->db->lastInsertId();
+    }
+
     public function isAssignedToTransaction($piID, $transactionID): bool {
         $sql = "SELECT COUNT(*) 
                 FROM GrantTransactions gt
@@ -58,5 +93,4 @@ class FacultyPI extends User {
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
     
-    // ... other methods (setSpendingLimit, etc) remain same
 }

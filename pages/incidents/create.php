@@ -1,6 +1,13 @@
 <?php $pageTitle = "Report Incident"; ?>
 <?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
+<?php 
+// Silence VS Code Intelephense warnings
+$users = $users ?? [];
+$equipment = $equipment ?? [];
+$flash = $flash ?? null;
+?>
+
 <div class="row justify-content-center">
     <div class="col-lg-8">
 
