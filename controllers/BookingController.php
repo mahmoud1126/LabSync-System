@@ -1,8 +1,9 @@
 <?php
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Booking.php';
-require_once __DIR__ . '/../models/Equipment.php'; // Required for Phase 1 Cost Calc
+require_once __DIR__ . '/../models/Equipment.php';
 require_once __DIR__ . '/../modules/equipment/SequentialBooking.php';
+require_once __DIR__ . '/../models/GuestResearcher.php'; // NEW: Required for Tax Math
 
 class BookingController extends BaseController {
     private $bookingModel;
@@ -24,7 +25,6 @@ class BookingController extends BaseController {
 
         if ($role === 'lab_manager') {
             $bookings = $this->bookingModel->getAllFutureBookings();
-            // Fetch the requests specifically for the Lab Manager
             $waitlistedBookings = $this->bookingModel->getBookingsByStatus('waitlisted');
         } else {
             $bookings = $this->bookingModel->getBookingsByUserId($userID);
@@ -32,7 +32,7 @@ class BookingController extends BaseController {
 
         $this->view('booking/index', [
             'bookings' => $bookings,
-            'waitlistedBookings' => $waitlistedBookings // Pass this to the view
+            'waitlistedBookings' => $waitlistedBookings
         ]);
     }
 
@@ -56,7 +56,6 @@ class BookingController extends BaseController {
         $grantID = $_POST['grantID'] ?? null;
 
         try {
-            // This will automatically create the booking as 'waitlisted' based on our model update!
             $result = $this->sequentialService->bookWithDependencies(
                 $userID, 
                 $equipmentID, 
@@ -78,7 +77,7 @@ class BookingController extends BaseController {
         exit();
     }
 
-    // NEW: Phase 1 Ops Approval
+    // PHASE 1 OPS APPROVAL: With Rate Multiplier!
     public function confirm($bookingID) {
         $this->requireRole(['lab_manager']);
         $booking = $this->bookingModel->getBookingById($bookingID);
@@ -89,19 +88,35 @@ class BookingController extends BaseController {
             return;
         }
 
-        // Calculate duration in hours
+        // 1. Calculate duration in hours
         $start = new DateTime($booking['startTime']);
         $end = new DateTime($booking['endTime']);
         $diff = $end->diff($start);
         $hours = $diff->h + ($diff->days * 24) + ($diff->i / 60);
 
-        // Run the Equipment Model cost calculation
-        $totalCost = $this->equipmentModel->calculateUsageCost($booking['equipmentID'], $hours);
+        // 2. Base cost calculation from equipment rates
+        $baseCost = $this->equipmentModel->calculateUsageCost($booking['equipmentID'], $hours);
 
-        // Save cost and move to Phase 2 (Confirmed)
-        $this->bookingModel->updateBookingWithCost($bookingID, 'confirmed', $totalCost, $this->getCurrentUserID());
+        // 3. Apply External Tax Rate if the user is a Guest Researcher
+        $guestModel = new GuestResearcher();
+        $guestInfo = $guestModel->getGuestResearcherById($booking['userID']);
         
-        $this->setFlash('success', 'Booking ops confirmed. Total Cost ($' . number_format($totalCost, 2) . ') calculated and sent to PI.');
+        $taxMultiplier = 1.0; // Default is 100% (1.0)
+        
+        if ($guestInfo) {
+            // E.g. 150% becomes 1.5 multiplier
+            $taxMultiplier = (float)$guestInfo['taxRate'] / 100;
+        }
+
+        // Final math
+        $finalCost = round($baseCost * $taxMultiplier, 2);
+
+        // 4. Save cost and move to Phase 2
+        $this->bookingModel->updateBookingWithCost($bookingID, 'confirmed', $finalCost, $this->getCurrentUserID());
+        
+        $taxMsg = ($taxMultiplier > 1.0) ? " (Includes " . ($taxMultiplier * 100) . "% external rate tax)" : "";
+        
+        $this->setFlash('success', 'Booking ops confirmed. Total Cost ($' . number_format($finalCost, 2) . ')' . $taxMsg . ' calculated and sent to PI.');
         $this->redirect('/booking/index');
     }
 
@@ -111,7 +126,6 @@ class BookingController extends BaseController {
         $booking = $this->bookingModel->getBookingById($bookingID);
 
         if ($role === 'lab_manager' || (isset($booking['userID']) && $booking['userID'] == $userID)) {
-            // Lab Manager uses this for Phase 1 rejection
             $this->bookingModel->updateBookingStatus($bookingID, 'cancelled');
             $this->setFlash('success', 'Booking cancelled successfully.');
         } else {

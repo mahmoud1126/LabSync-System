@@ -20,6 +20,9 @@ services:
         MYSQL_ROOT_PASSWORD: 123456
         MYSQL_DATABASE: labsync
     volumes:
+      # --- THE MAGIC SHIELD: This saves your data permanently ---
+      - mysql_data:/var/lib/mysql
+      # --------------------------------------------------------
       - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ./sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
     ports:
@@ -38,3 +41,7 @@ services:
       - PMA_PASSWORD=123456
     depends_on:
       - mysql
+
+# --- YOU MUST DECLARE THE VOLUME AT THE BOTTOM ---
+volumes:
+  mysql_data:

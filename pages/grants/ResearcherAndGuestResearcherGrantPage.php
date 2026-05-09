@@ -1,115 +1,94 @@
-<?php
-/** @var array $assignedGrants */
-/** @var array $myTransactions */
-/** @var float $totalSpent */
-?>
+<?php require_once __DIR__ . '/../../includes/header.php'; ?>
 
-<div class="container py-4">
-    <!-- Header with Total Spending -->
-    <div class="row mb-4 align-items-center">
-        <div class="col">
-            <h2 class="h3 mb-1">Financial Overview</h2>
-            <p class="text-muted">Managed grants and transaction history.</p>
-        </div>
-        <div class="col-auto">
-            <div class="bg-light p-3 rounded-3 border">
-                <small class="text-uppercase fw-bold text-muted d-block" style="font-size: 0.7rem;">Total Lifetime Spending</small>
-                <span class="h4 mb-0 text-primary">$<?= number_format($totalSpent, 2) ?></span>
-            </div>
+<div class="container-fluid mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-wallet2 text-primary me-2"></i> <?= htmlspecialchars($pageTitle ?? 'My Assigned Grants') ?></h2>
+    </div>
+
+    <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+        <div>
+            <strong>Funding Overview:</strong> This page displays the grants your Principal Investigator (PI) has authorized for your use. Deductions will be automatically partitioned based on your assigned billing percentages.
         </div>
     </div>
 
-    <!-- Active Grants Section -->
-    <h5 class="mb-3 text-secondary">Assigned Grants</h5>
-    <div class="row g-4 mb-5">
-        <?php if (empty($assignedGrants)): ?>
-            <div class="col-12">
-                <div class="alert alert-warning border-0 shadow-sm">
-                    No active grants found. You may need to be assigned to a grant by a PI to start sessions.
-                </div>
-            </div>
-        <?php else: ?>
-            <?php foreach ($assignedGrants as $grant): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 border-0 shadow-sm border-top border-primary border-4">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between mb-2">
-                                <h6 class="fw-bold mb-0"><?= htmlspecialchars($grant['grantName']) ?></h6>
-                                <span class="badge bg-soft-success text-success">Active</span>
-                            </div>
-                            
-                            <h3 class="my-3">$<?= number_format($grant['currentBalance'], 2) ?></h3>
-                            
-                            <div class="mt-4">
-                                <div class="d-flex justify-content-between small mb-1">
-                                    <span class="text-muted">Billing Weight</span>
-                                    <span class="fw-bold"><?= (float)$grant['billingPercentage'] ?>%</span>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar" style="width: <?= $grant['billingPercentage'] ?>%"></div>
-                                </div>
-                                <p class="mt-2 mb-0 text-muted small">
-                                    <i class="far fa-calendar-alt me-1"></i>
-                                    Expires: <?= date('M d, Y', strtotime($grant['expirationDate'])) ?>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-
-    <!-- Transaction Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white py-3">
-            <h5 class="mb-0">Recent Transactions</h5>
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-bottom py-3">
+            <h5 class="mb-0 text-dark"><i class="bi bi-card-list text-success me-2"></i> Authorized Grants</h5>
         </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="ps-4">Date</th>
-                        <th>Grant Source</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th class="text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($myTransactions)): ?>
-                        <tr><td colspan="5" class="text-center py-4 text-muted">No transactions recorded yet.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($myTransactions as $tx): ?>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Grant Name</th>
+                            <th>Status</th>
+                            <th>Current Balance</th>
+                            <th>My Coverage (%)</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($grants)): ?>
                             <tr>
-                                <td class="ps-4 small"><?= date('M d, Y H:i', strtotime($tx['createdAt'])) ?></td>
-                                <td><span class="badge border text-dark fw-normal"><?= htmlspecialchars($tx['grantName']) ?></span></td>
-                                <td class="small text-secondary"><?= htmlspecialchars($tx['description']) ?></td>
-                                <td class="fw-bold <?= $tx['transactionType'] === 'deduction' ? 'text-danger' : 'text-success' ?>">
-                                    <?= $tx['transactionType'] === 'deduction' ? '-' : '+' ?>$<?= number_format($tx['amount'], 2) ?>
-                                </td>
-                                <td class="text-center">
-                                    <?php 
-                                        $badgeClass = match($tx['approvalStatus']) {
-                                            'approved' => 'bg-success',
-                                            'pending'  => 'bg-warning text-dark',
-                                            'rejected' => 'bg-danger',
-                                            default    => 'bg-secondary'
-                                        };
-                                    ?>
-                                    <span class="badge <?= $badgeClass ?> rounded-pill px-3"><?= ucfirst($tx['approvalStatus']) ?></span>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-journal-x fs-3 d-block mb-2"></i>
+                                    You currently have no active grants assigned to you.<br>
+                                    <small>Please contact your PI if you believe this is a mistake.</small>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                        <?php else: ?>
+                            <?php foreach ($grants as $grant): ?>
+                                <tr>
+                                    <td class="ps-4 fw-semibold text-dark">
+                                        <?= htmlspecialchars($grant['grantName']) ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                            $status = strtolower($grant['grantStatus']);
+                                            $badgeClass = 'bg-secondary';
+                                            
+                                            if ($status === 'active') $badgeClass = 'bg-success';
+                                            elseif ($status === 'depleted') $badgeClass = 'bg-warning text-dark';
+                                            elseif ($status === 'expired') $badgeClass = 'bg-danger';
+                                        ?>
+                                        <span class="badge <?= $badgeClass ?>">
+                                            <?= ucfirst(htmlspecialchars($status)) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-primary fw-bold">
+                                            $<?= number_format((float)$grant['currentBalance'], 2) ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="fw-medium me-2"><?= (float)$grant['billingPercentage'] ?>%</span>
+                                            <div class="progress flex-grow-1" style="height: 6px; max-width: 100px;">
+                                                <div class="progress-bar bg-info" role="progressbar" style="width: <?= (float)$grant['billingPercentage'] ?>%;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                            $expiryDate = strtotime($grant['expirationDate']);
+                                            $isExpiringSoon = ($expiryDate - time()) < (30 * 24 * 60 * 60) && $status === 'active';
+                                        ?>
+                                        <span class="<?= $isExpiringSoon ? 'text-danger fw-medium' : 'text-muted' ?>">
+                                            <?= date('M d, Y', $expiryDate) ?>
+                                            <?php if($isExpiringSoon): ?>
+                                                <i class="bi bi-exclamation-circle ms-1" title="Expiring soon!"></i>
+                                            <?php endif; ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<style>
-    .bg-soft-success { background-color: #e8f5e9; }
-    .card { transition: transform 0.15s ease-in-out; }
-    .card:hover { transform: translateY(-2px); }
-</style>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

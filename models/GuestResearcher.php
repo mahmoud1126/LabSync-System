@@ -11,10 +11,10 @@ class GuestResearcher extends Researcher {
         return 'guest_researcher';
     }
 
-    public function createGuestResearcher( $userName, $userPassword, $institution, $expirationDate, $sponsorPIID,  $clearanceLevel = 0, $maxBookingHoursPerWeek = 20) {
+    // NEW: Added $taxRate to parameters
+    public function createGuestResearcher( $userName, $userPassword, $institution, $expirationDate, $sponsorPIID,  $clearanceLevel = 0, $maxBookingHoursPerWeek = 20, $taxRate = 100.00) {
         try {
             $this->db->beginTransaction();
-
 
             $userID = $this->createUser(
                 $userName,
@@ -26,14 +26,16 @@ class GuestResearcher extends Researcher {
                 $maxBookingHoursPerWeek  
             );
 
-            $sql = "INSERT INTO GuestResearchers (userID, institution, expirationDate, sponsorPIID)
-                    VALUES (:userID, :institution, :expirationDate, :sponsorPIID)";
+            // NEW: Added taxRate to the insert statement
+            $sql = "INSERT INTO GuestResearchers (userID, institution, expirationDate, sponsorPIID, taxRate)
+                    VALUES (:userID, :institution, :expirationDate, :sponsorPIID, :taxRate)";
             $stmt = $this->db->prepare($sql);
             $stmt->execute([
                 ':userID'          => $userID,
                 ':institution'     => $institution,
                 ':expirationDate'  => $expirationDate,
-                ':sponsorPIID'     => $sponsorPIID
+                ':sponsorPIID'     => $sponsorPIID,
+                ':taxRate'         => $taxRate
             ]);
 
             $this->db->commit();
@@ -47,7 +49,8 @@ class GuestResearcher extends Researcher {
 
     public function getGuestResearcherById($userID)
     {
-        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+        // NEW: Added gr.taxRate
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID, gr.taxRate,
                 sponsor.userName AS sponsorName
                 FROM Users u
                 JOIN GuestResearchers gr ON u.userID = gr.userID
@@ -61,7 +64,8 @@ class GuestResearcher extends Researcher {
 
     public function getAllGuestResearchers()
     {
-        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+        // NEW: Added gr.taxRate
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID, gr.taxRate,
                 sponsor.userName AS sponsorName
                 FROM Users u
                 JOIN GuestResearchers gr ON u.userID = gr.userID
@@ -76,7 +80,8 @@ class GuestResearcher extends Researcher {
 
     public function getGuestsBySponsor($sponsorPIID)
     {
-        $sql = "SELECT u.*, gr.institution, gr.expirationDate
+        // NEW: Added gr.taxRate
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.taxRate
                 FROM Users u
                 JOIN GuestResearchers gr ON u.userID = gr.userID
                 WHERE gr.sponsorPIID = :sponsorID
@@ -101,7 +106,6 @@ class GuestResearcher extends Researcher {
     {
         try {
             $this->db->beginTransaction();
-
             
             $this->updateStatus($userID, 'inactive');
 
@@ -183,7 +187,7 @@ class GuestResearcher extends Researcher {
  
     public function getGuestsExpiringSoon($days = 17)
     {
-        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID,
+        $sql = "SELECT u.*, gr.institution, gr.expirationDate, gr.sponsorPIID, gr.taxRate,
                        sponsor.userName AS sponsorName
                 FROM Users u
                 JOIN GuestResearchers gr ON u.userID = gr.userID
@@ -195,6 +199,4 @@ class GuestResearcher extends Researcher {
         $stmt->execute([':days' => $days]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
 }

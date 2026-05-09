@@ -57,10 +57,11 @@ class Grant {
 
     public function getGrantsByResearcher($userID) {
         $query = "
-            SELECT g.*, gua.accessLevel, gua.dateAssigned 
+            SELECT g.*, gua.billingPercentage 
             FROM Grants g
             JOIN GrantUserAccess gua ON g.grantID = gua.grantID
-            WHERE gua.userID = :userID AND g.grantStatus = 'active'
+            WHERE gua.userID = :userID
+            ORDER BY g.grantStatus ASC, g.expirationDate ASC
         ";
 
         try {
