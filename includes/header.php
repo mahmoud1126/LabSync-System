@@ -79,16 +79,6 @@ function isActive($page, $current)
                                     href="/LabSync-System/incidents">Incidents</a>
                             </li>
                         <?php endif; ?>
-
-                        <?php if (in_array($userRole, ['lab_manager'])): ?>
-                            <li class="nav-item">
-                                <a class="nav-link nav-link-custom <?= isActive('compliance', $currentPage) ?>"
-                                    href="/LabSync-System/compliance/pending-supervisions">
-                                    Supervisions
-                                </a>
-                            </li>
-                        <?php endif; ?>
-
                     <?php endif; ?>
 
                 </ul>
