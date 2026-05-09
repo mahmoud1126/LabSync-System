@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Grant.php';
 require_once __DIR__ . '/../models/GrantTransaction.php';
-require_once __DIR__ . '/../models/FacultyPI.php';
+require_once __DIR__ . '/../models/FacultyPi.php';
 
 class GrantController extends BaseController {
     private $grantModel;
