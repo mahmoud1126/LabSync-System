@@ -53,10 +53,22 @@ class GuestOnboarding{
 
         $clearanceLevel = (int) ($data['clearanceLevel'] ?? 0);
         $maxBookingHoursPerWeek = (int) ($data['maxBookingHoursPerWeek'] ?? 20);
-
+        
+        // NEW: Grab the tax rate (default 100%)
+        $taxRate = (float) ($data['taxRate'] ?? 100.00);
 
         try {
-            $this->guestModel->createGuestResearcher($data['userName'], $data['userPassword'], $data['institution'], $data['expirationDate'], (int) $data['sponsorPIID'],$clearanceLevel, $maxBookingHoursPerWeek );
+            // NEW: Added $taxRate to the creation method
+            $this->guestModel->createGuestResearcher(
+                $data['userName'], 
+                $data['userPassword'], 
+                $data['institution'], 
+                $data['expirationDate'], 
+                (int) $data['sponsorPIID'],
+                $clearanceLevel, 
+                $maxBookingHoursPerWeek, 
+                $taxRate
+            );
         } catch (PDOException $e) {
             return [
                 'success' => false,
@@ -75,6 +87,7 @@ class GuestOnboarding{
                 'institution' => $data['institution'],
                 'expirationDate' => $data['expirationDate'],
                 'sponsorPIID' => (int) $data['sponsorPIID'],
+                'taxRate' => $taxRate
             ]),
         );
 

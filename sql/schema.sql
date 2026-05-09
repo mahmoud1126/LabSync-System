@@ -38,6 +38,8 @@ CREATE TABLE GuestResearchers (
 
     institution VARCHAR(150) NOT NULL,
 
+    taxRate DECIMAL(5,2) DEFAULT 100.00,
+
     expirationDate DATE NOT NULL,
 
     sponsorPIID INT NOT NULL,

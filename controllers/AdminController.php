@@ -75,7 +75,6 @@ class AdminController extends BaseController
         $clearanceLevel = (int) $this->getPost('clearanceLevel', 0);
         $maxBookingHoursPerWeek = (int) $this->getPost('maxBookingHoursPerWeek', 20);
 
-
         if (empty($userName) || empty($userPassword) || empty($userType)) {
             $this->setFlash('error', 'Username, password, and role are required.');
             $this->redirect('/admin/users/create');
@@ -98,6 +97,7 @@ class AdminController extends BaseController
                 $expirationDate = $this->getPost('expirationDate');
                 $institution = $this->getPost('institution');
                 $sponsorPIID = (int) $this->getPost('sponsorPIID');
+                $taxRate = (float) $this->getPost('taxRate', 100.00);
 
                 if (empty($expirationDate) || empty($institution) || empty($sponsorPIID)) {
                     $this->setFlash('error', 'Guest researchers require expiration date, institution, and sponsor PI.');
@@ -106,6 +106,7 @@ class AdminController extends BaseController
                 }
 
                 $onboarding = new GuestOnboarding();
+                
                 $result = $onboarding->onboard([
                     'userName' => $userName,
                     'userPassword' => $userPassword,
@@ -114,6 +115,7 @@ class AdminController extends BaseController
                     'sponsorPIID' => $sponsorPIID,
                     'clearanceLevel' => $clearanceLevel,
                     'maxBookingHoursPerWeek' => $maxBookingHoursPerWeek,
+                    'taxRate' => $taxRate 
                 ]);
 
                 $this->setFlash($result['success'] ? 'success' : 'error', $result['message']);
@@ -122,7 +124,7 @@ class AdminController extends BaseController
                     $this->logAction(
                         'USER_CREATED',
                         'Users',
-                        "New guest researcher created: {$userName} (expires {$expirationDate})"
+                        "New guest researcher created: {$userName} (expires {$expirationDate}) at {$taxRate}% tax rate."
                     );
                     $this->redirect('/admin/users');
                 } else {
@@ -197,7 +199,7 @@ class AdminController extends BaseController
                         $userName,
                         $userPassword,
                         $clearanceLevel,
-                        false,                          // Researchers via this branch are NOT external
+                        false,
                         $maxBookingHoursPerWeek
                     );
 
