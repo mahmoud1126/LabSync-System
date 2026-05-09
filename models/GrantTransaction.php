@@ -17,7 +17,7 @@ class GrantTransaction {
                     (:grantID, :userID, :sessionID, :bookingID, :amount, :type, :desc, :base, :cons, :over, :status)";
 
         $stmt = $this->db->prepare($sql);
-        return $stmt->execute([
+        $success = $stmt->execute([
             ':grantID'   => $grantID,
             ':userID'    => $userID,
             ':sessionID' => $sessionID,
@@ -30,6 +30,9 @@ class GrantTransaction {
             ':over'      => $over,
             ':status'    => $status
         ]);
+
+        // NEW: Return the ID so we can use it for partitions!
+        return $success ? $this->db->lastInsertId() : false;
     }
 
     public function getTransactionById($id) {
@@ -119,16 +122,46 @@ class GrantTransaction {
     }
 
     public function createPartition($transactionID, $grantID, $percentage, $amount) {
-        $sql = "INSERT INTO GrantPartitions (transactionID, grantID, percentage, amountDeducted)
-                VALUES (:tID, :gID, :pct, :amt)";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute([':tID' => $transactionID, ':gID' => $grantID, ':pct' => $percentage, ':amt' => $amount]);
-    }
+    $sql = "INSERT INTO GrantPartitions (transactionID, grantID, percentage, amountDeducted)
+            VALUES (:tID, :gID, :pct, :amt)";
+    $stmt = $this->db->prepare($sql);
+    return $stmt->execute([
+        ':tID' => $transactionID,
+        ':gID' => $grantID,
+        ':pct' => $percentage,
+        ':amt' => $amount
+    ]);
+}
 
     public function getByGrant($grantID) {
         $sql = "SELECT * FROM GrantTransactions WHERE grantID = :id ORDER BY createdAt DESC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $grantID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAllPendingTransactions() {
+    $sql = "SELECT gt.*, g.grantName, u.userName 
+            FROM GrantTransactions gt
+            JOIN Grants g ON gt.grantID = g.grantID
+            JOIN Users u ON gt.userID = u.userID
+            WHERE gt.approvalStatus = 'pending'
+            ORDER BY gt.createdAt ASC";
+    $stmt = $this->db->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+    public function getAllRecentTransactions() {
+        $sql = "SELECT gt.*, g.grantName, u.userName 
+                FROM GrantTransactions gt
+                JOIN Grants g ON gt.grantID = g.grantID
+                JOIN Users u ON gt.userID = u.userID
+                WHERE gt.approvalStatus != 'pending'
+                ORDER BY gt.createdAt DESC 
+                LIMIT 30"; 
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

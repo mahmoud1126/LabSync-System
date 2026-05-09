@@ -11,13 +11,12 @@ class Grant {
         $this->db = Database::getInstance()->getConnection();
     }
 
-
-     public function createGrant($grantName, $piID, $totalBudget, $expirationDate)
+    public function createGrant($grantName, $piID, $totalBudget, $expirationDate)
     {
         if ($totalBudget <= 0) {
             return 0;
         }
-               $initialStatus = ($expirationDate >= date('Y-m-d')) ? 'active' : 'inactive';
+        $initialStatus = ($expirationDate >= date('Y-m-d')) ? 'active' : 'inactive';
 
         $sql = "INSERT INTO Grants
                     (grantName, piID, totalBudget, currentBalance, grantStatus, expirationDate)
@@ -36,8 +35,7 @@ class Grant {
         return $this->db->lastInsertId();
     }
 
-
-        public function getGrantById($grantID)
+    public function getGrantById($grantID)
     {
         $stmt = $this->db->prepare(
             "SELECT * FROM Grants WHERE grantID = :id"
@@ -46,8 +44,7 @@ class Grant {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-
-        public function getGrantsByPI($piID)
+    public function getGrantsByPI($piID)
     {
         $stmt = $this->db->prepare(
             "SELECT * FROM Grants
@@ -59,38 +56,34 @@ class Grant {
     }
 
     public function getGrantsByResearcher($userID) {
-    $query = "
-        SELECT g.*, gua.accessLevel, gua.dateAssigned 
-        FROM Grants g
-        JOIN GrantUserAccess gua ON g.grantID = gua.grantID
-        WHERE gua.userID = :userID AND g.grantStatus = 'active'
-    ";
+        $query = "
+            SELECT g.*, gua.accessLevel, gua.dateAssigned 
+            FROM Grants g
+            JOIN GrantUserAccess gua ON g.grantID = gua.grantID
+            WHERE gua.userID = :userID AND g.grantStatus = 'active'
+        ";
 
-    try {
-        $stmt = $this->db->prepare($query);
-        $stmt->execute([':userID' => $userID]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        return [];
+        try {
+            $stmt = $this->db->prepare($query);
+            $stmt->execute([':userID' => $userID]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            return [];
+        }
     }
-}
 
-
-        public function getActiveGrants()
-    {
-        $stmt = $this->db->prepare(
-            "SELECT * FROM Grants
-              WHERE grantStatus    = 'active'
-                AND expirationDate >= CURDATE()
-                AND currentBalance  > 0
-              ORDER BY expirationDate ASC"
-        );
+    public function getActiveGrants() {
+        $sql = "SELECT * FROM Grants 
+                WHERE grantStatus = 'active' 
+                AND expirationDate > CURDATE() 
+                ORDER BY grantName ASC";
+                
+        $stmt = $this->db->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function getAllGrants()
+    public function getAllGrants()
     {
         $stmt = $this->db->prepare(
             "SELECT g.*, u.userName AS piName
@@ -102,8 +95,7 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function getGrantsByStatus($status)
+    public function getGrantsByStatus($status)
     {
         $stmt = $this->db->prepare(
             "SELECT g.*, u.userName AS piName
@@ -116,8 +108,7 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function updateGrantStatus($grantID, $newStatus)
+    public function updateGrantStatus($grantID, $newStatus)
     {
         $stmt = $this->db->prepare(
             "UPDATE Grants
@@ -127,8 +118,7 @@ class Grant {
         return $stmt->execute([':status' => $newStatus, ':id' => $grantID]);
     }
 
-
-        public function updateGrantName($grantID, $newName)
+    public function updateGrantName($grantID, $newName)
     {
         $stmt = $this->db->prepare(
             "UPDATE Grants
@@ -138,8 +128,7 @@ class Grant {
         return $stmt->execute([':name' => trim($newName), ':id' => $grantID]);
     }
 
-
-        public function extendGrantExpiry($grantID, $newDate)
+    public function extendGrantExpiry($grantID, $newDate)
     {
         if ($newDate <= date('Y-m-d')) {
             return false;
@@ -158,8 +147,7 @@ class Grant {
         return $stmt->execute([':date' => $newDate, ':id' => $grantID]);
     }
 
-
-        public function expireStaleGrants()
+    public function expireStaleGrants()
     {
         $stmt = $this->db->prepare(
             "UPDATE Grants
@@ -171,8 +159,7 @@ class Grant {
         return $stmt->rowCount();
     }
 
-
-        public function getGrantBalance($grantID)
+    public function getGrantBalance($grantID)
     {
         $stmt = $this->db->prepare(
             "SELECT currentBalance FROM Grants WHERE grantID = :id"
@@ -182,8 +169,7 @@ class Grant {
         return ($row !== false) ? (float) $row['currentBalance'] : null;
     }
 
-
-        public function hasSufficientBalance($grantID, $requiredAmount)
+    public function hasSufficientBalance($grantID, $requiredAmount)
     {
         $stmt = $this->db->prepare(
             "SELECT currentBalance, grantStatus, expirationDate
@@ -193,33 +179,29 @@ class Grant {
         $stmt->execute([':id' => $grantID]);
         $grant = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$grant)
-               return false;
-        if ($grant['grantStatus'] !== 'active')
-               return false;
-        if ($grant['expirationDate'] < date('Y-m-d'))
-               return false;
+        if (!$grant) return false;
+        if ($grant['grantStatus'] !== 'active') return false;
+        if ($grant['expirationDate'] < date('Y-m-d')) return false;
         return (float)$grant['currentBalance'] >= (float)$requiredAmount;
     }
 
-
-        public function deductFromBalance($grantID, $amount)
+    public function deductFromBalance($grantID, $amount)
     {
         if ($amount <= 0) {
             return false;
         }
 
+        // Using 0.01 margin of error to fix floating-point math issues
         $sql = "UPDATE Grants
                    SET currentBalance = currentBalance - :amount,
                        grantStatus    = CASE
-                            WHEN (currentBalance - :amount2) <= 0
+                            WHEN (currentBalance - :amount2) <= 0.01
                             THEN 'depleted'
                             ELSE grantStatus
                             END
                  WHERE grantID= :id
                    AND grantStatus = 'active'
-                   AND currentBalance >= :amount3
-                   AND expirationDate >= CURDATE()";
+                   AND currentBalance >= :amount3";
 
         $stmt = $this->db->prepare($sql);
         $stmt->execute([
@@ -232,8 +214,7 @@ class Grant {
         return $stmt->rowCount() === 1;
     }
 
-
-        public function refundToBalance($grantID, $amount)
+    public function refundToBalance($grantID, $amount)
     {
         if ($amount <= 0) {
             return false;
@@ -242,8 +223,7 @@ class Grant {
         $sql = "UPDATE Grants
                    SET currentBalance = LEAST(currentBalance + :amount, totalBudget),
                        grantStatus = CASE
-                              WHEN grantStatus    = 'depleted'
-                              AND expirationDate >= CURDATE()
+                              WHEN grantStatus = 'depleted'
                               THEN 'active'
                               ELSE grantStatus
                                 END
@@ -253,8 +233,7 @@ class Grant {
         return $stmt->execute([':amount' => $amount, ':id' => $grantID]);
     }
 
-
-        public function getExpiringGrants($daysAhead = 30)
+    public function getExpiringGrants($daysAhead = 30)
     {
         $stmt = $this->db->prepare(
             "SELECT g.*, u.userName AS piName
@@ -269,8 +248,7 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function addUserToGrant($grantID, $userID, $billingPercentage = 100.00)
+    public function addUserToGrant($grantID, $userID, $billingPercentage = 100.00)
     {
         if ($billingPercentage <= 0 || $billingPercentage > 100) {
             return false;
@@ -289,8 +267,7 @@ class Grant {
         ]);
     }
 
-
-        public function removeUserFromGrant($grantID, $userID)
+    public function removeUserFromGrant($grantID, $userID)
     {
         $stmt = $this->db->prepare(
             "DELETE FROM GrantUserAccess
@@ -299,8 +276,7 @@ class Grant {
         return $stmt->execute([':grantID' => $grantID, ':userID' => $userID]);
     }
 
-
-        public function userHasAccessToGrant($grantID, $userID)
+    public function userHasAccessToGrant($grantID, $userID)
     {
         $stmt = $this->db->prepare(
             "SELECT 1
@@ -316,8 +292,7 @@ class Grant {
         return (bool) $stmt->fetchColumn();
     }
 
-
-        public function getUsersOnGrant($grantID)
+    public function getUsersOnGrant($grantID)
     {
         $stmt = $this->db->prepare(
             "SELECT gua.accessID,
@@ -335,8 +310,7 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function getGrantsForUser($userID)
+    public function getGrantsForUser($userID)
     {
         $stmt = $this->db->prepare(
             "SELECT g.grantID,
@@ -355,8 +329,7 @@ class Grant {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-
-        public function updateBillingPercentage($grantID, $userID, $newPercentage)
+    public function updateBillingPercentage($grantID, $userID, $newPercentage)
     {
         if ($newPercentage <= 0 || $newPercentage > 100) {
             return false;
@@ -373,5 +346,38 @@ class Grant {
             ':userID'  => $userID,
         ]);
     }
-    
+
+    public function getUsersWithGrants() {
+        $sql = "SELECT u.userID, u.userName, u.userType, 
+                GROUP_CONCAT(
+                    CASE 
+                        WHEN u.userType = 'lab_manager' THEN g.grantName
+                        ELSE CONCAT(g.grantName, ' (', ROUND(gua.billingPercentage), '%)') 
+                    END
+                    SEPARATOR ', '
+                ) as assignedGrants
+                FROM Users u
+                LEFT JOIN GrantUserAccess gua ON u.userID = gua.userID
+                LEFT JOIN Grants g ON gua.grantID = g.grantID
+                GROUP BY u.userID
+                ORDER BY u.userName ASC";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function deleteGrant($grantID) {
+        try {
+            $stmt = $this->db->prepare("DELETE FROM Grants WHERE grantID = :id");
+            return $stmt->execute([':id' => $grantID]);
+        } catch (PDOException $e) {
+            return false; 
+        }
+    }
+
+    public function removeAllGrantsFromUser($userID) {
+        $stmt = $this->db->prepare("DELETE FROM GrantUserAccess WHERE userID = :userID");
+        return $stmt->execute([':userID' => $userID]);
+    }
 }

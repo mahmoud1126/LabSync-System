@@ -136,15 +136,17 @@ CREATE TABLE Bookings (
 
     endTime DATETIME NOT NULL,
 
-    bookingStatus ENUM('confirmed', 'pending', 'cancelled', 'completed', 'rejected', 'no_show') DEFAULT 'pending',
+    bookingStatus ENUM('confirmed', 'pending', 'cancelled', 'completed', 'rejected', 'waitlisted') DEFAULT 'pending',
 
-    isAutoBooked BOOLEAN DEFAULT FALSE, 
+    isAutoBooked BOOLEAN DEFAULT FALSE,
 
-    parentBookingID INT NULL, 
+    parentBookingID INT NULL,
 
-    grantID INT NULL, 
+    grantID INT NULL,
 
-    labManagerID INT NULL, 
+    labManagerID INT NULL,
+
+    totalCost DECIMAL(10,2) DEFAULT 0.00,
 
     cancellationReason TEXT NULL,
 
@@ -152,20 +154,20 @@ CREATE TABLE Bookings (
 
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_booking_user 
-
+    CONSTRAINT fk_booking_user
+    
         FOREIGN KEY (userID) REFERENCES Users(userID),
 
-    CONSTRAINT fk_booking_equipment 
-
+    CONSTRAINT fk_booking_equipment
+    
         FOREIGN KEY (equipmentID) REFERENCES Equipment(equipmentID),
 
-    CONSTRAINT fk_booking_parent 
-
+    CONSTRAINT fk_booking_parent
+    
         FOREIGN KEY (parentBookingID) REFERENCES Bookings(bookingID),
 
-    CONSTRAINT fk_booking_manager 
-
+    CONSTRAINT fk_booking_manager
+    
         FOREIGN KEY (labManagerID) REFERENCES Users(userID)
 
 ) ENGINE=InnoDB;
@@ -328,24 +330,24 @@ CREATE TABLE GrantTransactions (
 
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_trans_grant 
-
+    CONSTRAINT fk_trans_grant
+    
         FOREIGN KEY (grantID) REFERENCES Grants(grantID),
 
-    CONSTRAINT fk_trans_session 
-
+    CONSTRAINT fk_trans_session
+    
         FOREIGN KEY (sessionID) REFERENCES Sessions(sessionID),
 
-    CONSTRAINT fk_trans_booking 
-
+    CONSTRAINT fk_trans_booking
+    
         FOREIGN KEY (bookingID) REFERENCES Bookings(bookingID),
 
-    CONSTRAINT fk_trans_user 
-
+    CONSTRAINT fk_trans_user
+    
         FOREIGN KEY (userID) REFERENCES Users(userID),
 
-    CONSTRAINT fk_trans_pi 
-
+    CONSTRAINT fk_trans_pi
+    
         FOREIGN KEY (approvedByPIID) REFERENCES Users(userID)
 
 ) ENGINE=InnoDB;

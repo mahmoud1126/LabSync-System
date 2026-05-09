@@ -10,7 +10,8 @@ class Booking {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    public function createBooking($userID, $equipmentID, $startTime, $endTime, $bookingStatus = 'pending', $isAutoBooked = false, $parentBookingID = null, $grantID = null, $labManagerID = null) {
+    // UPDATED: Default status is now 'waitlisted' for Phase 1
+    public function createBooking($userID, $equipmentID, $startTime, $endTime, $bookingStatus = 'waitlisted', $isAutoBooked = false, $parentBookingID = null, $grantID = null, $labManagerID = null) {
     
     $sql = "INSERT INTO Bookings (userID, equipmentID, startTime, endTime, bookingStatus, isAutoBooked, parentBookingID, grantID, labManagerID)
             VALUES (:userID, :equipmentID, :startTime, :endTime, :status, :isAutoBooked, :parentBookingID, :grantID, :labManagerID)";
@@ -47,8 +48,6 @@ class Booking {
     }
 }
 
-
-
     public function getBookingById($bookingID) {
     // JOIN with Equipment table to get the equipmentName
     $sql = "SELECT b.*, e.equipmentName 
@@ -83,13 +82,16 @@ class Booking {
     }
 
     public function getBookingsByStatus($status) {
-        $sql = "SELECT * FROM Bookings WHERE bookingStatus = :status ORDER BY startTime ASC";
+        $sql = "SELECT b.*, e.equipmentName, u.userName 
+                FROM Bookings b 
+                JOIN Equipment e ON b.equipmentID = e.equipmentID
+                JOIN Users u ON b.userID = u.userID
+                WHERE b.bookingStatus = :status 
+                ORDER BY b.startTime ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':status' => $status]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-
 
     public function updateBookingStatus($bookingID, $status, $labManagerID = null) {
         $sql = "UPDATE Bookings
@@ -101,6 +103,21 @@ class Booking {
             ':status'=> $status,
             ':managerID'=> $labManagerID,
             ':id'=> $bookingID
+        ]);
+    }
+
+    // NEW: Used by Lab Manager to lock in the price when confirming Phase 1
+    public function updateBookingWithCost($bookingID, $status, $cost, $labManagerID) {
+        $sql = "UPDATE Bookings
+                SET bookingStatus = :status, totalCost = :cost, labManagerID = :managerID
+                WHERE bookingID = :id";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            ':status' => $status,
+            ':cost' => $cost,
+            ':managerID' => $labManagerID,
+            ':id' => $bookingID
         ]);
     }
 
@@ -132,7 +149,7 @@ class Booking {
     public function hasTimeConflict($equipmentID, $requestedStartTime, $requestedEndTime) {
         $sql = "SELECT COUNT(*) FROM Bookings
                 WHERE equipmentID = :equipmentID
-                AND bookingStatus IN ('confirmed', 'pending')
+                AND bookingStatus IN ('confirmed', 'pending', 'waitlisted')
                 AND (
                     (startTime < :endTime AND endTime > :startTime)
                 )";
@@ -149,14 +166,12 @@ class Booking {
     }
 
         public function getAllFutureBookings() {
-            // Changed b.status to b.bookingStatus
             $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.bookingStatus != 'cancelled' ORDER BY b.startTime ASC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         public function getBookingsByUserId($userID) {
-            // Changed b.status to b.bookingStatus
             $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id AND b.bookingStatus != 'cancelled' ORDER BY b.startTime DESC");
             $stmt->execute([':id' => $userID]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
