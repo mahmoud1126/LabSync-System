@@ -10,7 +10,6 @@ class Booking {
         $this->db = Database::getInstance()->getConnection();
     }
 
-    // UPDATED: Default status is now 'waitlisted' for Phase 1
     public function createBooking($userID, $equipmentID, $startTime, $endTime, $bookingStatus = 'waitlisted', $isAutoBooked = false, $parentBookingID = null, $grantID = null, $labManagerID = null) {
     
     $sql = "INSERT INTO Bookings (userID, equipmentID, startTime, endTime, bookingStatus, isAutoBooked, parentBookingID, grantID, labManagerID)
@@ -49,7 +48,6 @@ class Booking {
 }
 
     public function getBookingById($bookingID) {
-    // JOIN with Equipment table to get the equipmentName
     $sql = "SELECT b.*, e.equipmentName 
             FROM Bookings b 
             JOIN Equipment e ON b.equipmentID = e.equipmentID 
@@ -106,7 +104,6 @@ class Booking {
         ]);
     }
 
-    // NEW: Used by Lab Manager to lock in the price when confirming Phase 1
     public function updateBookingWithCost($bookingID, $status, $cost, $labManagerID) {
         $sql = "UPDATE Bookings
                 SET bookingStatus = :status, totalCost = :cost, labManagerID = :managerID
@@ -149,7 +146,7 @@ class Booking {
     public function hasTimeConflict($equipmentID, $requestedStartTime, $requestedEndTime) {
         $sql = "SELECT COUNT(*) FROM Bookings
                 WHERE equipmentID = :equipmentID
-                AND bookingStatus IN ('confirmed', 'pending', 'waitlisted')
+                AND bookingStatus IN ('confirmed', 'pending', 'waitlisted', 'approved')
                 AND (
                     (startTime < :endTime AND endTime > :startTime)
                 )";
@@ -166,13 +163,16 @@ class Booking {
     }
 
         public function getAllFutureBookings() {
-            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.bookingStatus != 'cancelled' ORDER BY b.startTime ASC");
+            // Include cancelled requests in general logs too, so admin can see history
+            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID ORDER BY b.startTime DESC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         public function getBookingsByUserId($userID) {
-            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id AND b.bookingStatus != 'cancelled' ORDER BY b.startTime DESC");
+            // REMOVED: WHERE b.bookingStatus != 'cancelled'
+            // Now it pulls all booking history for the dashboard!
+            $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id ORDER BY b.bookingID DESC LIMIT 10");
             $stmt->execute([':id' => $userID]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }

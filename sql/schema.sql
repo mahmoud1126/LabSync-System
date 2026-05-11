@@ -138,7 +138,7 @@ CREATE TABLE Bookings (
 
     endTime DATETIME NOT NULL,
 
-    bookingStatus ENUM('confirmed', 'pending', 'cancelled', 'completed', 'rejected', 'waitlisted') DEFAULT 'pending',
+    bookingStatus ENUM('pending', 'waitlisted', 'confirmed', 'approved', 'rejected', 'cancelled', 'completed') DEFAULT 'pending',
 
     isAutoBooked BOOLEAN DEFAULT FALSE,
 

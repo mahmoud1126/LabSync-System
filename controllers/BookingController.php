@@ -3,7 +3,7 @@ require_once __DIR__ . '/../core/Controller.php';
 require_once __DIR__ . '/../models/Booking.php';
 require_once __DIR__ . '/../models/Equipment.php';
 require_once __DIR__ . '/../modules/equipment/SequentialBooking.php';
-require_once __DIR__ . '/../models/GuestResearcher.php'; // NEW: Required for Tax Math
+require_once __DIR__ . '/../models/GuestResearcher.php'; 
 
 class BookingController extends BaseController {
     private $bookingModel;
@@ -25,7 +25,8 @@ class BookingController extends BaseController {
 
         if ($role === 'lab_manager') {
             $bookings = $this->bookingModel->getAllFutureBookings();
-            $waitlistedBookings = $this->bookingModel->getBookingsByStatus('waitlisted');
+            // FIXED: Database defaults to 'pending', so we fetch 'pending' requests for Phase 1
+            $waitlistedBookings = $this->bookingModel->getBookingsByStatus('pending');
         } else {
             $bookings = $this->bookingModel->getBookingsByUserId($userID);
         }
@@ -66,7 +67,7 @@ class BookingController extends BaseController {
 
             echo json_encode([
                 'success' => $result['success'],
-                'message' => $result['success'] ? 'Booking waitlisted! Awaiting Lab Manager approval.' : 'Conflict: This time slot is already taken.'
+                'message' => $result['success'] ? 'Booking requested! Awaiting Lab Manager approval.' : 'Conflict: This time slot is already taken.'
             ]);
         } catch (Exception $e) {
             echo json_encode([
@@ -77,7 +78,6 @@ class BookingController extends BaseController {
         exit();
     }
 
-    // PHASE 1 OPS APPROVAL: With Rate Multiplier!
     public function confirm($bookingID) {
         $this->requireRole(['lab_manager']);
         $booking = $this->bookingModel->getBookingById($bookingID);
@@ -88,30 +88,24 @@ class BookingController extends BaseController {
             return;
         }
 
-        // 1. Calculate duration in hours
         $start = new DateTime($booking['startTime']);
         $end = new DateTime($booking['endTime']);
         $diff = $end->diff($start);
         $hours = $diff->h + ($diff->days * 24) + ($diff->i / 60);
 
-        // 2. Base cost calculation from equipment rates
         $baseCost = $this->equipmentModel->calculateUsageCost($booking['equipmentID'], $hours);
 
-        // 3. Apply External Tax Rate if the user is a Guest Researcher
         $guestModel = new GuestResearcher();
         $guestInfo = $guestModel->getGuestResearcherById($booking['userID']);
         
-        $taxMultiplier = 1.0; // Default is 100% (1.0)
+        $taxMultiplier = 1.0; 
         
         if ($guestInfo) {
-            // E.g. 150% becomes 1.5 multiplier
             $taxMultiplier = (float)$guestInfo['taxRate'] / 100;
         }
 
-        // Final math
         $finalCost = round($baseCost * $taxMultiplier, 2);
 
-        // 4. Save cost and move to Phase 2
         $this->bookingModel->updateBookingWithCost($bookingID, 'confirmed', $finalCost, $this->getCurrentUserID());
         
         $taxMsg = ($taxMultiplier > 1.0) ? " (Includes " . ($taxMultiplier * 100) . "% external rate tax)" : "";
