@@ -13,7 +13,6 @@ class Equipment {
 
     public function getEquipmentById($equipmentID)
     {
-        // FIXED: Now fetches the most recent safety briefing content using a subquery
         $stmt = $this->db->prepare(
             "SELECT e.*, e.equipmentName AS name,
                    (SELECT briefingContent FROM SafetyBriefings sb WHERE sb.equipmentID = e.equipmentID ORDER BY briefingID DESC LIMIT 1) AS briefingContent
@@ -26,10 +25,11 @@ class Equipment {
 
     public function getAllEquipment()
     {
-        // FIXED: Added a check to see if a safety briefing exists
+        // FIXED: Now specifically fetching the Briefing Content text for the frontend modal!
         $stmt = $this->db->prepare(
             "SELECT e.*, e.equipmentName AS name,
-                   (SELECT COUNT(*) FROM SafetyBriefings sb WHERE sb.equipmentID = e.equipmentID) AS hasBriefing
+                   (SELECT COUNT(*) FROM SafetyBriefings sb WHERE sb.equipmentID = e.equipmentID) AS hasBriefing,
+                   (SELECT briefingContent FROM SafetyBriefings sb WHERE sb.equipmentID = e.equipmentID ORDER BY briefingID DESC LIMIT 1) AS briefingContent
              FROM Equipment e 
              ORDER BY e.equipmentName ASC"
         );
@@ -223,7 +223,6 @@ class Equipment {
         }
     }
 
-    // FIXED: Safely checks and updates/inserts Briefings without relying on ON DUPLICATE KEY
     public function updateEquipment($id, $data) {
         try {
             $this->db->beginTransaction();
@@ -246,7 +245,6 @@ class Equipment {
                 ':id'        => $id
             ]);
 
-            // Handle Safety Briefing safely
             if (!empty($data['briefingContent'])) {
                 $stmtCheck = $this->db->prepare("SELECT briefingID FROM SafetyBriefings WHERE equipmentID = :id LIMIT 1");
                 $stmtCheck->execute([':id' => $id]);

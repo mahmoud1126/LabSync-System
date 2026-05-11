@@ -111,12 +111,38 @@ require_once __DIR__ . '/../../includes/header.php';
                                 </div>
                                 <div class="modal-footer border-0">
                                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" onclick="sendBooking(<?= $item['equipmentID'] ?>)" class="btn btn-primary px-4 shadow-sm">Confirm Booking</button>
+                                    <button type="button" onclick="sendBooking(<?= $item['equipmentID'] ?>, <?= !empty($item['hasBriefing']) ? 'true' : 'false' ?>)" class="btn btn-primary px-4 shadow-sm">Confirm Booking</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
+
+                <?php if (!empty($item['hasBriefing'])): ?>
+                <div class="modal fade" id="briefingModal<?= $item['equipmentID'] ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg border-start border-warning border-5">
+                            <div class="modal-header bg-light border-0">
+                                <h5 class="modal-title fw-bold text-dark">
+                                    <i class="bi bi-shield-exclamation text-warning me-2"></i> 
+                                    Mandatory Safety Briefing
+                                </h5>
+                                </div>
+                            <div class="modal-body p-4">
+                                <p class="text-muted mb-4">Please read the following safety instructions carefully. You must acknowledge them to finalize your booking.</p>
+                                <div class="bg-white p-4 border rounded shadow-sm text-dark" style="max-height: 400px; overflow-y: auto;">
+                                    <?= nl2br(htmlspecialchars($item['briefingContent'] ?? '')) ?>
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 bg-light">
+                                <button type="button" onclick="acknowledgeSafety(<?= $item['equipmentID'] ?>)" class="btn btn-warning px-5 fw-bold text-dark shadow-sm">
+                                    <i class="bi bi-check2-circle me-2"></i> I Acknowledge
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
 
             <?php endforeach; ?>
         <?php endif; ?>
@@ -126,7 +152,8 @@ require_once __DIR__ . '/../../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-function sendBooking(id) {
+// Updated to accept the hasBriefing boolean
+function sendBooking(id, hasBriefing) {
     const form = document.getElementById('bookingForm' + id);
     const msgBox = document.getElementById('msg' + id);
     const formData = new FormData(form);
@@ -150,13 +177,46 @@ function sendBooking(id) {
 
         if (data.success) {
             form.reset();
-            setTimeout(() => { location.reload(); }, 2000);
+            
+            // If the equipment has a briefing, trap them in the modal. Otherwise, reload instantly.
+            if (hasBriefing) {
+                setTimeout(() => {
+                    // Hide the booking modal
+                    var bookModalEl = document.getElementById('bookModal' + id);
+                    var bookModal = bootstrap.Modal.getInstance(bookModalEl);
+                    bookModal.hide();
+                    
+                    // Show the unbreakable briefing modal
+                    var briefingModal = new bootstrap.Modal(document.getElementById('briefingModal' + id), {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    briefingModal.show();
+                }, 1000);
+            } else {
+                setTimeout(() => { location.reload(); }, 2000);
+            }
         }
     })
     .catch(err => {
         msgBox.classList.remove('d-none');
         msgBox.classList.add('alert-danger');
         msgBox.textContent = "Something went wrong. Check if you are logged in.";
+    });
+}
+
+// Function called when they hit "I Acknowledge"
+function acknowledgeSafety(id) {
+    const formData = new FormData();
+    formData.append('equipmentID', id);
+
+    // Hits the backend route you already built in EquipmentController to save the acknowledgment!
+    fetch('/LabSync-System/equipment/acknowledgeSafety', {
+        method: 'POST',
+        body: formData
+    }).finally(() => {
+        // Force the page reload to clear the lock and show success
+        location.reload();
     });
 }
 </script>

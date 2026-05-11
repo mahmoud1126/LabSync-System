@@ -16,7 +16,7 @@
     <?php if ($_SESSION['user']['userType'] === 'lab_manager'): ?>
         <div class="card shadow-sm border-0 mb-5 border-start border-warning border-4">
             <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 text-dark"><i class="bi bi-hourglass-split text-warning me-2"></i> Phase 1: Waitlisted Requests</h5>
+                <h5 class="mb-0 text-dark"><i class="bi bi-hourglass-split text-warning me-2"></i> Phase 1: Pending Requests</h5>
                 <small class="text-muted">Review availability and confirm to calculate costs and send to PI.</small>
             </div>
             <div class="card-body p-0">
@@ -119,18 +119,20 @@
                                     </td>
                                     <td>
                                         <?php 
+                                            // FIXED: Status Colors updated to handle 'pending' correctly
                                             $statusClass = 'bg-secondary';
+                                            if ($booking['bookingStatus'] === 'pending') $statusClass = 'bg-warning text-dark';
                                             if ($booking['bookingStatus'] === 'waitlisted') $statusClass = 'bg-warning text-dark';
                                             if ($booking['bookingStatus'] === 'confirmed') $statusClass = 'bg-info text-dark';
                                             if ($booking['bookingStatus'] === 'completed') $statusClass = 'bg-success';
-                                            if ($booking['bookingStatus'] === 'cancelled') $statusClass = 'bg-danger';
+                                            if ($booking['bookingStatus'] === 'cancelled' || $booking['bookingStatus'] === 'rejected') $statusClass = 'bg-danger';
                                         ?>
                                         <span class="badge <?= $statusClass ?>"><?= ucfirst(htmlspecialchars($booking['bookingStatus'])) ?></span>
                                     </td>
                                     
                                     <?php if ($_SESSION['user']['userType'] !== 'lab_manager'): ?>
                                     <td class="text-center pe-4">
-                                        <?php if (in_array($booking['bookingStatus'], ['waitlisted', 'confirmed', 'pending'])): ?>
+                                        <?php if (in_array($booking['bookingStatus'], ['pending', 'waitlisted', 'confirmed'])): ?>
                                             <form action="/LabSync-System/booking/cancel/<?= (int)$booking['bookingID'] ?>" method="POST" class="m-0" onsubmit="return confirm('Cancel this booking?');">
                                                 <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">Cancel</button>
                                             </form>
