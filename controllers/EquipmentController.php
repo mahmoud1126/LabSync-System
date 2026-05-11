@@ -11,13 +11,9 @@ class EquipmentController extends BaseController {
     public function __construct() {
         $this->equipmentModel = new Equipment();
         $this->clearanceModule = new SecurityClearance();
-         $this->userModel = new Researcher();
+        $this->userModel = new Researcher();
     }
 
-    /**
-     * Main Index Router:
-     * Redirects users to the correct view based on their role
-     */
     public function index() {
         $this->requireLogin();
         $userRole = $this->getCurrentUserRole();
@@ -31,9 +27,6 @@ class EquipmentController extends BaseController {
         }
     }
 
-    /**
-     * Lab Manager Equipment View
-     */
     private function managerIndex() {
         $this->requireRole('lab_manager');
         $allEquipment = $this->equipmentModel->getAllEquipment();
@@ -50,9 +43,6 @@ class EquipmentController extends BaseController {
         ]);
     }
 
-    /**
-     * Researcher & Guest Researcher Booking View
-     */
     public function researcherIndex() {
         $this->requireRole(['researcher', 'guest_researcher']);
         
@@ -79,9 +69,7 @@ class EquipmentController extends BaseController {
     ]);
 }
 
-
     public function book() {
-        // Basic security check for researcher roles
         if (!in_array($_SESSION['userType'], ['researcher', 'guest_researcher'])) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
             return;
@@ -112,17 +100,17 @@ class EquipmentController extends BaseController {
     }
 
     public function acknowledgeSafety() {
-    if (!$this->isPost()) return;
+        if (!$this->isPost()) return;
 
-    $userID = $this->getCurrentUserID();
-    $equipmentID = $this->getPost('equipmentID');
+        $userID = $this->getCurrentUserID();
+        $equipmentID = $this->getPost('equipmentID');
 
-    require_once __DIR__ . '/../models/Researcher.php';
-    $researcherModel = new Researcher();
-    
-    $success = $researcherModel->saveSafetyAcknowledgment($userID, $equipmentID);
+        require_once __DIR__ . '/../models/Researcher.php';
+        $researcherModel = new Researcher();
+        
+        $success = $researcherModel->saveSafetyAcknowledgment($userID, $equipmentID);
 
-    echo json_encode(['success' => $success]);
+        echo json_encode(['success' => $success]);
     }
 
     public function info($id) {
@@ -141,27 +129,21 @@ class EquipmentController extends BaseController {
         $this->view('equipment/edit', ['equipment' => $equipmentInfo]);
     }
 
-    /**
-     * Processes creation including Safety Briefings and Buffer Minutes
-     */
     public function store() { 
         $this->requireRole('lab_manager');
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Passes $_POST containing briefingContent, powerUpBufferMinutes, and coolDownBufferMinutes
             $success = $this->equipmentModel->createEquipment($_POST);
-            
             if ($success) {
+                $this->setFlash('success', 'Equipment successfully created!');
                 $this->redirect('/equipment');
             } else {
-                echo "Failed to create equipment and safety briefing.";
+                $this->setFlash('error', 'Failed to create equipment.');
+                $this->redirect('/equipment');
             }
         }
     }
 
-    /**
-     * Processes updates including Safety Briefings and Buffer Minutes
-     */
     public function update($id) { 
         $this->requireRole('lab_manager');
         
@@ -169,17 +151,15 @@ class EquipmentController extends BaseController {
             $success = $this->equipmentModel->updateEquipment($id, $_POST);
             
             if ($success) {
+                $this->setFlash('success', 'Equipment updated successfully!');
                 $this->redirect('/equipment');
             } else {
-                echo "Failed to update equipment details.";
+                $this->setFlash('error', 'Failed to update equipment details.');
+                $this->redirect('/equipment');
             }
         }
     }
 
-    /**
-     * Processes deletion
-     * (SafetyBriefings are removed automatically via SQL ON DELETE CASCADE)
-     */
     public function delete($id) { 
         $this->requireRole('lab_manager');
         
@@ -187,9 +167,11 @@ class EquipmentController extends BaseController {
             $success = $this->equipmentModel->deleteEquipment($id);
             
             if ($success) {
+                $this->setFlash('success', 'Equipment successfully deleted.');
                 $this->redirect('/equipment');
             } else {
-                echo "Failed to delete equipment.";
+                $this->setFlash('error', 'Failed to delete equipment.');
+                $this->redirect('/equipment');
             }
         }
     }

@@ -11,6 +11,9 @@ require_once __DIR__ . '/../../../includes/header.php';
                 <h2 class="mb-1"><i class="bi bi-tools text-primary"></i> Equipment Management</h2>
                 <p class="text-muted mb-0">Monitor and manage all lab equipment</p>
             </div>
+            <a href="/LabSync-System/equipment/create" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg"></i> Create New Equipment
+            </a>
         </div>
 
         <?php if (!empty($flash)): ?>
@@ -22,7 +25,7 @@ require_once __DIR__ . '/../../../includes/header.php';
 
         <div class="card shadow-sm border-0">
             <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
-                <span class="fw-bold"><i class="bi bi-list-ul"></i> All Equipment</span>
+                <span class="fw-bold"><i class="bi bi-list-ul"></i> Equipment List</span>
                 <span class="badge bg-secondary"><?= count($equipment) ?> total</span>
             </div>
 
@@ -35,53 +38,63 @@ require_once __DIR__ . '/../../../includes/header.php';
                 <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead>
+                            <thead class="table-light">
                                 <tr>
                                     <th class="ps-4">ID</th>
-                                    <th>Name</th>
+                                    <th>Equipment Name</th>
                                     <th>Status</th>
                                     <th>Hourly Rate</th>
-                                    <th>Clearance Req.</th>
-                                    <th>Usage Hours</th>
-                                    <th class="text-end pe-4">Actions</th>
+                                    <th>Clearance Level</th>
+                                    <th>Briefing</th>
+                                    <th class="text-center pe-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($equipment as $eq): ?>
                                     <tr style="cursor: pointer;" onclick="window.location='/LabSync-System/admin/equipment/<?= $eq['equipmentID'] ?>'">
-                                        <td class="ps-4"><span class="id-badge">#<?= $eq['equipmentID'] ?></span></td>
+                                        <td class="ps-4"><span class="badge bg-light text-primary border">#<?= $eq['equipmentID'] ?></span></td>
                                         <td><strong><?= htmlspecialchars($eq['equipmentName']) ?></strong></td>
                                         <td>
                                             <?php
                                             $statusClass = match ($eq['equipmentStatus']) {
-                                                'available' => 'severity-low',
-                                                'in_use' => 'severity-medium',
-                                                'calibration_needed' => 'severity-medium',
-                                                'under_maintenance' => 'severity-high',
-                                                'locked_out' => 'severity-critical',
-                                                default => 'severity-medium'
+                                                'available' => 'bg-success',
+                                                'in_use' => 'bg-info text-dark',
+                                                'calibration_needed' => 'bg-warning text-dark',
+                                                'under_maintenance' => 'bg-danger',
+                                                'locked_out' => 'bg-dark',
+                                                default => 'bg-secondary'
                                             };
                                             ?>
-                                            <span class="severity-badge <?= $statusClass ?>">
-                                                <?= str_replace('_', ' ', $eq['equipmentStatus']) ?>
+                                            <span class="badge <?= $statusClass ?>">
+                                                <?= ucfirst(str_replace('_', ' ', $eq['equipmentStatus'])) ?>
                                             </span>
                                         </td>
-                                        <td>$<?= number_format((float) $eq['hourlyRateExternal'], 2) ?></td>
-                                        <td>Level <?= (int) $eq['requiredClearanceLevel'] ?></td>
-                                        <td><?= (float) ($eq['totalUsageHours'] ?? 0) ?>h</td>
+                                        <td>$<?= number_format((float) $eq['hourlyRateExternal'], 2) ?> / hr</td>
                                         
-                                        <td class="text-end pe-4" onclick="event.stopPropagation();">
+                                        <td>
+                                            <span class="badge bg-light text-dark border"><i class="bi bi-shield-check text-success me-1"></i> Level <?= (int) $eq['requiredClearanceLevel'] ?></span>
+                                        </td>
+                                        
+                                        <td>
+                                            <?php if (isset($eq['hasBriefing']) && $eq['hasBriefing'] > 0): ?>
+                                                <span class="badge bg-light text-dark border"><i class="bi bi-file-earmark-text text-primary me-1"></i> Yes</span>
+                                            <?php else: ?>
+                                                <span class="text-muted small">None</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        
+                                        <td class="text-center pe-4" onclick="event.stopPropagation();">
                                             <a href="/LabSync-System/admin/equipment/<?= $eq['equipmentID'] ?>"
-                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 me-2">
-                                                Manage
+                                                class="btn btn-sm btn-outline-warning rounded px-3 me-2">
+                                                <i class="bi bi-pencil"></i> Edit
                                             </a>
                                             <button type="button" 
-                                                    class="btn btn-link text-danger text-decoration-none btn-sm p-0 border-0 fw-bold" 
+                                                    class="btn btn-outline-danger btn-sm rounded px-3" 
                                                     data-bs-toggle="modal" 
                                                     data-bs-target="#deleteEquipmentModal" 
                                                     data-id="<?= $eq['equipmentID'] ?>"
                                                     data-name="<?= htmlspecialchars($eq['equipmentName']) ?>">
-                                                Remove
+                                                <i class="bi bi-trash"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -124,7 +137,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = button.getAttribute('data-id');
             const name = button.getAttribute('data-name');
             document.getElementById('eqNameDisplay').textContent = name;
-            document.getElementById('deleteEquipmentForm').action = '/LabSync-System/admin/equipment/' + id + '/delete';
+            // Uses the EquipmentController delete route you set up earlier
+            document.getElementById('deleteEquipmentForm').action = '/LabSync-System/equipment/delete/' + id;
         });
     }
 });
