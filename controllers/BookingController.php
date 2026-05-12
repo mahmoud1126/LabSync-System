@@ -25,7 +25,6 @@ class BookingController extends BaseController {
 
         if ($role === 'lab_manager') {
             $bookings = $this->bookingModel->getAllFutureBookings();
-            // FIXED: Database defaults to 'pending', so we fetch 'pending' requests for Phase 1
             $waitlistedBookings = $this->bookingModel->getBookingsByStatus('pending');
         } else {
             $bookings = $this->bookingModel->getBookingsByUserId($userID);

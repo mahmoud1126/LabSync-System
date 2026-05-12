@@ -163,17 +163,32 @@ class Booking {
     }
 
         public function getAllFutureBookings() {
-            // Include cancelled requests in general logs too, so admin can see history
             $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID ORDER BY b.startTime DESC");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
 
         public function getBookingsByUserId($userID) {
-            // REMOVED: WHERE b.bookingStatus != 'cancelled'
-            // Now it pulls all booking history for the dashboard!
             $stmt = $this->db->prepare("SELECT b.*, e.equipmentName FROM Bookings b JOIN Equipment e ON b.equipmentID = e.equipmentID WHERE b.userID = :id ORDER BY b.bookingID DESC LIMIT 10");
             $stmt->execute([':id' => $userID]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+
+        public function getCurrentlyStartableBookings($userID) {
+            $sql = "SELECT b.*, e.equipmentName
+                    FROM Bookings b
+                    JOIN Equipment e ON b.equipmentID = e.equipmentID
+                    WHERE b.userID = :userID
+                      AND b.bookingStatus = 'confirmed'
+                      AND NOW() BETWEEN b.startTime AND b.endTime
+                      AND NOT EXISTS (
+                          SELECT 1 FROM Sessions s
+                          WHERE s.bookingID = b.bookingID
+                      )
+                    ORDER BY b.startTime ASC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([':userID' => $userID]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }

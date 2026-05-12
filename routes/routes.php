@@ -2,22 +2,20 @@
 require_once __DIR__ . '/../core/Router.php';
 $router = new Router();
 
-// --- AUTHENTICATION ---
+// AUTHENTICATION
 $router->get('/',           'AuthController', 'showLogin');
 $router->get('/login',      'AuthController', 'showLogin');
 $router->post('/login',     'AuthController', 'doLogin');
 $router->get('/logout',     'AuthController', 'logout');
-
-// --- THE MISSING ROUTE (FIX) ---
 $router->get('/dashboard',  'DashboardController', 'index');
 
-// --- INCIDENTS ---
+// INCIDENTS
 $router->get('/incidents', 'IncidentController', 'index');
 $router->get('/incidents/create', 'IncidentController', 'create');
 $router->post('/incidents/store','IncidentController', 'store');
 $router->get('/incidents/{id}', 'IncidentController', 'show');
 
-// --- EQUIPMENT ---
+// EQUIPMENT
 $router->get('/equipment',             'EquipmentController', 'index');
 $router->get('/equipment/info/{id}',   'EquipmentController', 'info');
 $router->get('/equipment/create',      'EquipmentController', 'create');
@@ -27,20 +25,20 @@ $router->post('/equipment/store',      'EquipmentController', 'store');
 $router->post('/equipment/update/{id}', 'EquipmentController', 'update');
 $router->post('/EquipmentController/book', 'EquipmentController', 'book');
 $router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
-// --- Secondary Equipment (Sequential Booking Dependency) ---
+// Secondary Equipment (Sequential Booking Dependency)
 $router->post('/equipment/dependency/add/{id}',    'EquipmentController', 'addDependency');
 $router->post('/equipment/dependency/remove/{id}', 'EquipmentController', 'removeDependency');
 
-// --- BOOKINGS & PHASE 1 APPROVALS ---
+// BOOKINGS & PHASE 1 APPROVALS
 $router->get('/bookings', 'BookingController', 'index');
 $router->get('/booking/index', 'BookingController', 'index');
 $router->post('/booking/store', 'BookingController', 'store');
 $router->post('/booking/cancel/{id}', 'BookingController', 'cancel');
 $router->get('/booking/view', 'BookingController', 'details');
-// NEW: Phase 1 Lab Manager Confirmation Route
+// Phase 1 Lab Manager Confirmation Route
 $router->post('/booking/confirm/{id}', 'BookingController', 'confirm');
 
-// --- GRANTS ---
+// GRANTS
 $router->get('/grants', 'GrantController', 'index');
 $router->post('/grants/reallocate', 'GrantController', 'reallocate');
 $router->get('/grants/add', 'GrantController', 'create');
@@ -51,7 +49,7 @@ $router->post('/grants/delete', 'GrantController', 'delete');
 $router->get('/grants/manage', 'GrantController', 'manage');
 $router->post('/grants/updateAssignment', 'GrantController', 'updateAssignment');
 
-// --- ADMIN ---
+// ADMIN
 $router->get('/admin', 'AdminController', 'index');
 $router->get('/admin/users',                    'AdminController', 'users');
 $router->get('/admin/users/create',             'AdminController', 'createUser');
@@ -71,7 +69,7 @@ $router->get('/admin/briefings',          'AdminController', 'briefings');
 $router->get('/admin/briefings/create',   'AdminController', 'createBriefing');
 $router->post('/admin/briefings/store',   'AdminController', 'storeBriefing');
 
-// --- PI (Financial & Administrative) & PHASE 2 APPROVALS ---
+// PI (Financial & Administrative) & PHASE 2 APPROVALS
 $router->get('/pi', 'PIController', 'index');            
 $router->get('/PI', 'PIController', 'index');            
 $router->get('/pi/requests', 'PIController', 'requests');   
@@ -84,7 +82,7 @@ $router->post('/PI/approveBooking', 'PIController', 'approveBooking');
 $router->post('/PI/rejectBooking', 'PIController', 'rejectBooking');
 $router->post('/PI/rejectTransactionList', 'PIController', 'rejectTransactionList');
 
-// --- COMPLIANCE ---
+// COMPLIANCE
 $router->post('/compliance/requestSupervision',    'ComplianceController', 'requestSupervision');
 $router->get('/compliance/pending-supervisions',   'ComplianceController', 'showPendingSupervisions');
 $router->post('/compliance/approveSupervision',    'ComplianceController', 'approveSupervision');

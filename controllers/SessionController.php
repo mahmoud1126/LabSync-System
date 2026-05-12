@@ -10,13 +10,22 @@ class SessionController extends BaseController
         $this->checkGuestExpiry();
 
         require_once __DIR__ . '/../models/Session.php';
+        
         $sessionModel = new Session();
-
         $userID = $this->getCurrentUserID();
+        $userRole = $this->getCurrentUserRole();
         $activeSessions = $sessionModel->getActiveSessionsByUser($userID);
+        $startableBookings = [];
+        if (in_array($userRole, ['researcher', 'guest_researcher'], true)) {
+            require_once __DIR__ . '/../models/Booking.php';
+            $bookingModel = new Booking();
+            $startableBookings = $bookingModel->getCurrentlyStartableBookings($userID);
+        }
 
         $this->view('sessions/active', [
-            'activeSessions' => $activeSessions,
+            'activeSessions'     => $activeSessions,
+            'startableBookings'  => $startableBookings,
+            'userRole'           => $userRole,
         ]);
     }
 

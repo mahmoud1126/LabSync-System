@@ -1,6 +1,6 @@
 <?php
-$pageTitle = "Equipment Gallery"; 
-require_once __DIR__ . '/../../includes/header.php'; 
+$pageTitle = "Equipment Gallery";
+require_once __DIR__ . '/../../includes/header.php';
 /** @var array $equipments */
 ?>
 
@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="d-flex align-items-center">
                 <i class="bi bi-check-circle-fill me-2 fs-5"></i>
                 <div>
-                    <strong>Booking Confirmed!</strong> Your reservation has been successfully recorded. 
+                    <strong>Booking Confirmed!</strong> Your reservation has been successfully recorded.
                     <a href="/LabSync-System/bookings" class="alert-link text-decoration-underline">View My Bookings</a>
                 </div>
             </div>
@@ -39,13 +39,13 @@ require_once __DIR__ . '/../../includes/header.php';
                     <div class="card h-100 shadow-sm border-0">
                         <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center pt-3">
                             <span class="id-badge">#<?= htmlspecialchars($item['equipmentID'] ?? '0') ?></span>
-                            <?php 
-                                $status = strtolower($item['equipmentStatus'] ?? 'unavailable');
-                                $badgeClass = ($status === 'available') ? 'bg-success' : 'bg-secondary';
+                            <?php
+                            $status = strtolower($item['equipmentStatus'] ?? 'unavailable');
+                            $badgeClass = ($status === 'available') ? 'bg-success' : 'bg-secondary';
                             ?>
                             <span class="badge <?= $badgeClass ?> rounded-pill px-3"><?= ucfirst($status) ?></span>
                         </div>
-                        
+
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title fw-bold text-dark mb-3">
                                 <?= htmlspecialchars($item['equipmentName'] ?? 'Equipment Item') ?>
@@ -60,11 +60,11 @@ require_once __DIR__ . '/../../includes/header.php';
                                     <div class="d-flex flex-wrap gap-1">
                                         <?php foreach ($item['dependencies'] as $dep): ?>
                                             <?php
-                                                $isUnavailable = ($dep['equipmentStatus'] ?? 'available') !== 'available';
-                                                $depBadgeClass = $isUnavailable ? 'bg-danger' : 'bg-info text-dark';
+                                            $isUnavailable = ($dep['equipmentStatus'] ?? 'available') !== 'available';
+                                            $depBadgeClass = $isUnavailable ? 'bg-danger' : 'bg-info text-dark';
                                             ?>
                                             <span class="badge <?= $depBadgeClass ?>"
-                                                  title="<?= $isUnavailable ? 'Currently unavailable — booking will be blocked' : 'Will be auto-booked for the same time slot' ?>">
+                                                title="<?= $isUnavailable ? 'Currently unavailable — booking will be blocked' : 'Will be auto-booked for the same time slot' ?>">
                                                 <?= htmlspecialchars($dep['equipmentName']) ?>
                                             </span>
                                         <?php endforeach; ?>
@@ -81,9 +81,9 @@ require_once __DIR__ . '/../../includes/header.php';
                             <div class="mt-auto border-top pt-3">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="small d-flex align-items-center">
-                                        <span class="text-muted me-1">Requirement:</span> 
+                                        <span class="text-muted me-1">Requirement:</span>
                                         <span class="fw-bold me-2">Lvl <?= (int) ($item['requiredClearanceLevel'] ?? 0) ?></span>
-                                        
+
                                         <?php if (!empty($item['hasBriefing'])): ?>
                                             <span class="badge bg-warning text-dark border" title="Safety Briefing Required">
                                                 <i class="bi bi-shield-exclamation"></i> Briefing
@@ -94,11 +94,11 @@ require_once __DIR__ . '/../../includes/header.php';
                                         $<?= number_format((float)($item['hourlyRateExternal'] ?? $item['hourly_rate'] ?? 0), 2) ?>/hr
                                     </div>
                                 </div>
-                                
-                                <button class="btn btn-primary btn-sm w-100 shadow-sm" 
-                                        <?= ($item['canShowBookButton'] ?? false) ? '' : 'disabled' ?>
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#bookModal<?= $item['equipmentID'] ?>">
+
+                                <button class="btn btn-primary btn-sm w-100 shadow-sm"
+                                    <?= ($item['canShowBookButton'] ?? false) ? '' : 'disabled' ?>
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#bookModal<?= $item['equipmentID'] ?>">
                                     <i class="bi bi-calendar-check me-1"></i>
                                     <?= ($item['canShowBookButton'] ?? false) ? 'Book Now' : 'Locked' ?>
                                 </button>
@@ -119,7 +119,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                     <div id="msg<?= $item['equipmentID'] ?>" class="alert d-none"></div>
 
                                     <input type="hidden" name="equipmentID" value="<?= $item['equipmentID'] ?>">
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold small text-muted text-uppercase">Reservation Date</label>
                                         <input type="date" name="bookingDate" class="form-control" required min="<?= date('Y-m-d') ?>">
@@ -146,29 +146,29 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
 
                 <?php if (!empty($item['hasBriefing'])): ?>
-                <div class="modal fade" id="briefingModal<?= $item['equipmentID'] ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content border-0 shadow-lg border-start border-warning border-5">
-                            <div class="modal-header bg-light border-0">
-                                <h5 class="modal-title fw-bold text-dark">
-                                    <i class="bi bi-shield-exclamation text-warning me-2"></i> 
-                                    Mandatory Safety Briefing
-                                </h5>
+                    <div class="modal fade" id="briefingModal<?= $item['equipmentID'] ?>" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
+                            <div class="modal-content border-0 shadow-lg border-start border-warning border-5">
+                                <div class="modal-header bg-light border-0">
+                                    <h5 class="modal-title fw-bold text-dark">
+                                        <i class="bi bi-shield-exclamation text-warning me-2"></i>
+                                        Mandatory Safety Briefing
+                                    </h5>
                                 </div>
-                            <div class="modal-body p-4">
-                                <p class="text-muted mb-4">Please read the following safety instructions carefully. You must acknowledge them to finalize your booking.</p>
-                                <div class="bg-white p-4 border rounded shadow-sm text-dark" style="max-height: 400px; overflow-y: auto;">
-                                    <?= nl2br(htmlspecialchars($item['briefingContent'] ?? '')) ?>
+                                <div class="modal-body p-4">
+                                    <p class="text-muted mb-4">Please read the following safety instructions carefully. You must acknowledge them to finalize your booking.</p>
+                                    <div class="bg-white p-4 border rounded shadow-sm text-dark" style="max-height: 400px; overflow-y: auto;">
+                                        <?= nl2br(htmlspecialchars($item['briefingContent'] ?? '')) ?>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="modal-footer border-0 bg-light">
-                                <button type="button" onclick="acknowledgeSafety(<?= $item['equipmentID'] ?>)" class="btn btn-warning px-5 fw-bold text-dark shadow-sm">
-                                    <i class="bi bi-check2-circle me-2"></i> I Acknowledge
-                                </button>
+                                <div class="modal-footer border-0 bg-light">
+                                    <button type="button" onclick="acknowledgeSafety(<?= $item['equipmentID'] ?>)" class="btn btn-warning px-5 fw-bold text-dark shadow-sm">
+                                        <i class="bi bi-check2-circle me-2"></i> I Acknowledge
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 <?php endif; ?>
 
             <?php endforeach; ?>
@@ -179,73 +179,67 @@ require_once __DIR__ . '/../../includes/header.php';
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Updated to accept the hasBriefing boolean
-function sendBooking(id, hasBriefing) {
-    const form = document.getElementById('bookingForm' + id);
-    const msgBox = document.getElementById('msg' + id);
-    const formData = new FormData(form);
+    function sendBooking(id, hasBriefing) {
+        const form = document.getElementById('bookingForm' + id);
+        const msgBox = document.getElementById('msg' + id);
+        const formData = new FormData(form);
 
-    if (formData.get('startTime') >= formData.get('endTime')) {
-        msgBox.classList.remove('d-none');
-        msgBox.classList.add('alert-danger');
-        msgBox.textContent = "End time must be after start time.";
-        return; 
+        if (formData.get('startTime') >= formData.get('endTime')) {
+            msgBox.classList.remove('d-none');
+            msgBox.classList.add('alert-danger');
+            msgBox.textContent = "End time must be after start time.";
+            return;
+        }
+
+        fetch('booking/store', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                msgBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+                msgBox.classList.add(data.success ? 'alert-success' : 'alert-danger');
+                msgBox.textContent = data.message;
+
+                if (data.success) {
+                    form.reset();
+
+                    if (hasBriefing) {
+                        setTimeout(() => {
+                            var bookModalEl = document.getElementById('bookModal' + id);
+                            var bookModal = bootstrap.Modal.getInstance(bookModalEl);
+                            bookModal.hide();
+                            var briefingModal = new bootstrap.Modal(document.getElementById('briefingModal' + id), {
+                                backdrop: 'static',
+                                keyboard: false
+                            });
+                            briefingModal.show();
+                        }, 1000);
+                    } else {
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    }
+                }
+            })
+            .catch(err => {
+                msgBox.classList.remove('d-none');
+                msgBox.classList.add('alert-danger');
+                msgBox.textContent = "Something went wrong. Check if you are logged in.";
+            });
     }
 
-    fetch('booking/store', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        msgBox.classList.remove('d-none', 'alert-success', 'alert-danger');
-        msgBox.classList.add(data.success ? 'alert-success' : 'alert-danger');
-        msgBox.textContent = data.message;
+    function acknowledgeSafety(id) {
+        const formData = new FormData();
+        formData.append('equipmentID', id);
 
-        if (data.success) {
-            form.reset();
-            
-            // If the equipment has a briefing, trap them in the modal. Otherwise, reload instantly.
-            if (hasBriefing) {
-                setTimeout(() => {
-                    // Hide the booking modal
-                    var bookModalEl = document.getElementById('bookModal' + id);
-                    var bookModal = bootstrap.Modal.getInstance(bookModalEl);
-                    bookModal.hide();
-                    
-                    // Show the unbreakable briefing modal
-                    var briefingModal = new bootstrap.Modal(document.getElementById('briefingModal' + id), {
-                        backdrop: 'static',
-                        keyboard: false
-                    });
-                    briefingModal.show();
-                }, 1000);
-            } else {
-                setTimeout(() => { location.reload(); }, 2000);
-            }
-        }
-    })
-    .catch(err => {
-        msgBox.classList.remove('d-none');
-        msgBox.classList.add('alert-danger');
-        msgBox.textContent = "Something went wrong. Check if you are logged in.";
-    });
-}
-
-// Function called when they hit "I Acknowledge"
-function acknowledgeSafety(id) {
-    const formData = new FormData();
-    formData.append('equipmentID', id);
-
-    // Hits the backend route you already built in EquipmentController to save the acknowledgment!
-    fetch('/LabSync-System/equipment/acknowledgeSafety', {
-        method: 'POST',
-        body: formData
-    }).finally(() => {
-        // Force the page reload to clear the lock and show success
-        location.reload();
-    });
-}
+        fetch('/LabSync-System/equipment/acknowledgeSafety', {
+            method: 'POST',
+            body: formData
+        }).finally(() => {
+            location.reload();
+        });
+    }
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

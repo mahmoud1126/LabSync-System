@@ -54,12 +54,8 @@ class EquipmentController extends BaseController {
             $clearanceCheck = $this->clearanceModule->verifyAccess($userID, $eq['equipmentID']);
             $eq['hasAccess'] = $clearanceCheck['success'];
             $eq['accessMessage'] = $clearanceCheck['message'];
-
-            // Sequential Booking Dependency: expose the linked secondary equipment
-            // so the researcher can see what will be auto-booked alongside.
             $eq['dependencies'] = $this->equipmentModel->getDependencies($eq['equipmentID']);
             $eq['depsReady']    = $this->equipmentModel->areDependenciesAvailable($eq['equipmentID']);
-
             $eq['canShowBookButton'] = $eq['hasAccess'] &&
                                        ($eq['equipmentStatus'] === 'available') &&
                                        $eq['depsReady'];
@@ -129,12 +125,8 @@ class EquipmentController extends BaseController {
     public function edit($id) {
         $this->requireRole('lab_manager');
         $equipmentInfo = $this->equipmentModel->getEquipmentById($id);
-
-        // Secondary Equipment feature: load existing dependencies + selectable pool
         $dependencies   = $this->equipmentModel->getDependencies($id);
         $availablePool  = $this->equipmentModel->getAllEquipmentExcept($id);
-
-        // Filter out already-linked secondary equipment from the dropdown pool
         $linkedIDs = array_column($dependencies, 'equipmentID');
         $availablePool = array_values(array_filter($availablePool, function ($eq) use ($linkedIDs) {
             return !in_array($eq['equipmentID'], $linkedIDs);

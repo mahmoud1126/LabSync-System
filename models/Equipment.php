@@ -25,7 +25,6 @@ class Equipment {
 
     public function getAllEquipment()
     {
-        // FIXED: Now specifically fetching the Briefing Content text for the frontend modal!
         $stmt = $this->db->prepare(
             "SELECT e.*, e.equipmentName AS name,
                    (SELECT COUNT(*) FROM SafetyBriefings sb WHERE sb.equipmentID = e.equipmentID) AS hasBriefing,

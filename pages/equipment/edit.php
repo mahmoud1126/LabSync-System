@@ -1,4 +1,5 @@
 <?php
+
 /** @var array $equipment */
 /** @var array $dependencies */
 /** @var array $availablePool */
@@ -31,7 +32,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <?php endif; ?>
 
         <form method="POST" action="/LabSync-System/equipment/update/<?= $equipment['equipmentID'] ?>">
-            
+
             <div class="row g-4">
                 <div class="col-lg-7">
                     <div class="card shadow-sm border-0 h-100">
@@ -39,7 +40,7 @@ require_once __DIR__ . '/../../includes/header.php';
                             <i class="bi bi-sliders"></i> Core Configuration
                         </div>
                         <div class="card-body">
-                            
+
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Equipment Name *</label>
                                 <input type="text" class="form-control" name="equipmentName" value="<?= htmlspecialchars($equipment['equipmentName']) ?>" required>
@@ -53,7 +54,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Clearance Level *</label>
                                     <select class="form-select" name="requiredClearanceLevel" required>
-                                        <?php for($i = 0; $i <= 5; $i++): ?>
+                                        <?php for ($i = 0; $i <= 5; $i++): ?>
                                             <option value="<?= $i ?>" <?= $equipment['requiredClearanceLevel'] == $i ? 'selected' : '' ?>>Level <?= $i ?></option>
                                         <?php endfor; ?>
                                     </select>
@@ -87,7 +88,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
 
                 <div class="col-lg-5">
-                    
+
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-white fw-bold py-3 text-primary border-bottom-0">
                             <i class="bi bi-shield-check"></i> Safety Briefing
@@ -113,7 +114,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <dd class="col-sm-6 fw-bold">
                                     <?= (float) ($equipment['currentCalibrationHours'] ?? 0) ?> h / <?= (float) ($equipment['calibrationThresholdHours'] ?? 0) ?> h
                                 </dd>
-                                
+
                                 <dt class="col-sm-6 text-muted">Overhead Rate:</dt>
                                 <dd class="col-sm-6 fw-bold"><?= (float) ($equipment['overheadPercentage'] ?? 0) ?>%</dd>
                             </dl>
@@ -133,9 +134,6 @@ require_once __DIR__ . '/../../includes/header.php';
 
         </form>
 
-        <!-- =============================================================== -->
-        <!-- Secondary Equipment (Sequential Booking Dependency) management -->
-        <!-- =============================================================== -->
         <div class="card shadow-sm border-0 mt-4 border-start border-info border-4">
             <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
                 <div>
@@ -165,23 +163,23 @@ require_once __DIR__ . '/../../includes/header.php';
                                     <span class="badge bg-light text-dark border me-2">#<?= (int) $dep['equipmentID'] ?></span>
                                     <strong><?= htmlspecialchars($dep['equipmentName']) ?></strong>
                                     <?php
-                                        $statusClass = match ($dep['equipmentStatus']) {
-                                            'available'          => 'bg-success',
-                                            'in_use'             => 'bg-info text-dark',
-                                            'calibration_needed' => 'bg-warning text-dark',
-                                            'under_maintenance'  => 'bg-danger',
-                                            'locked_out'         => 'bg-dark',
-                                            default              => 'bg-secondary'
-                                        };
+                                    $statusClass = match ($dep['equipmentStatus']) {
+                                        'available'          => 'bg-success',
+                                        'in_use'             => 'bg-info text-dark',
+                                        'calibration_needed' => 'bg-warning text-dark',
+                                        'under_maintenance'  => 'bg-danger',
+                                        'locked_out'         => 'bg-dark',
+                                        default              => 'bg-secondary'
+                                    };
                                     ?>
                                     <span class="badge <?= $statusClass ?> ms-2">
                                         <?= ucfirst(str_replace('_', ' ', $dep['equipmentStatus'])) ?>
                                     </span>
                                 </div>
                                 <form method="POST"
-                                      action="/LabSync-System/equipment/dependency/remove/<?= (int) $equipment['equipmentID'] ?>"
-                                      onsubmit="return confirm('Unlink this secondary equipment?');"
-                                      class="m-0">
+                                    action="/LabSync-System/equipment/dependency/remove/<?= (int) $equipment['equipmentID'] ?>"
+                                    onsubmit="return confirm('Unlink this secondary equipment?');"
+                                    class="m-0">
                                     <input type="hidden" name="secondaryEquipmentID" value="<?= (int) $dep['equipmentID'] ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
                                         <i class="bi bi-x-circle"></i> Unlink
@@ -194,8 +192,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <?php if (!empty($availablePool)): ?>
                     <form method="POST"
-                          action="/LabSync-System/equipment/dependency/add/<?= (int) $equipment['equipmentID'] ?>"
-                          class="row g-2 align-items-end">
+                        action="/LabSync-System/equipment/dependency/add/<?= (int) $equipment['equipmentID'] ?>"
+                        class="row g-2 align-items-end">
                         <div class="col-md-9">
                             <label class="form-label fw-semibold small text-muted text-uppercase">Link new secondary equipment</label>
                             <select class="form-select" name="secondaryEquipmentID" required>
