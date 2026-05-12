@@ -4,7 +4,11 @@
          colors="true"
          cacheResult="false"
          failOnWarning="false"
-         stopOnFailure="false">
+         stopOnFailure="false"
+         testdox="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnIncompleteTests="true"
+         displayDetailsOnSkippedTests="true">
 
     <testsuites>
         <testsuite name="LabSync Unit Tests">
