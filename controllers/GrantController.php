@@ -126,11 +126,11 @@ class GrantController extends BaseController {
 
     public function processAssign() {
         $this->requireRole(['faculty_pi']);
-        
+
         if ($this->isPost()) {
             $userID = (int)$this->getPost('userID');
-            $grantIDs = $_POST['grantIDs'] ?? []; 
-            $billingPercentage = (float)$this->getPost('billingPercentage', 100);
+            $grantIDs = $_POST['grantIDs'] ?? [];
+            $postedPercentages = $_POST['billingPercentages'] ?? [];
 
             if (empty($grantIDs)) {
                 $this->setFlash('error', 'Please select at least one grant to assign.');
@@ -139,7 +139,7 @@ class GrantController extends BaseController {
             }
 
             $users = $this->grantModel->getUsersWithGrants();
-            $targetRole = 'researcher'; // fallback
+            $targetRole = 'researcher';
             foreach ($users as $u) {
                 if ($u['userID'] == $userID) {
                     $targetRole = $u['userType'];
@@ -147,18 +147,38 @@ class GrantController extends BaseController {
                 }
             }
 
+            $perGrantPercentages = [];
+
             if ($targetRole === 'lab_manager') {
-                $billingPercentage = 0;
+                foreach ($grantIDs as $grantID) {
+                    $perGrantPercentages[(int)$grantID] = 0.0;
+                }
             } else {
+                foreach ($grantIDs as $grantID) {
+                    $gid = (int)$grantID;
+                    if (!isset($postedPercentages[$gid]) || $postedPercentages[$gid] === '') {
+                        $this->setFlash('error', "Please enter a billing percentage for every selected grant.");
+                        $this->redirect('/grants/assign');
+                        return;
+                    }
+                    $pct = (float)$postedPercentages[$gid];
+                    if ($pct <= 0 || $pct > 100) {
+                        $this->setFlash('error', "Each billing percentage must be greater than 0 and at most 100.");
+                        $this->redirect('/grants/assign');
+                        return;
+                    }
+                    $perGrantPercentages[$gid] = $pct;
+                }
+
                 $currentGrants = $this->grantModel->getGrantsForUser($userID);
                 $simulatedPercentages = [];
 
                 foreach ($currentGrants as $grant) {
-                    $simulatedPercentages[$grant['grantID']] = (float)$grant['billingPercentage'];
+                    $simulatedPercentages[(int)$grant['grantID']] = (float)$grant['billingPercentage'];
                 }
 
-                foreach ($grantIDs as $selectedGrantID) {
-                    $simulatedPercentages[(int)$selectedGrantID] = $billingPercentage;
+                foreach ($perGrantPercentages as $gid => $pct) {
+                    $simulatedPercentages[$gid] = $pct;
                 }
 
                 $newTotal = round(array_sum($simulatedPercentages), 2);
@@ -171,8 +191,8 @@ class GrantController extends BaseController {
             }
 
             $successCount = 0;
-            foreach ($grantIDs as $grantID) {
-                if ($this->grantModel->addUserToGrant((int)$grantID, $userID, $billingPercentage)) {
+            foreach ($perGrantPercentages as $grantID => $pct) {
+                if ($this->grantModel->addUserToGrant($grantID, $userID, $pct)) {
                     $successCount++;
                 }
             }
@@ -182,7 +202,7 @@ class GrantController extends BaseController {
             } else {
                 $this->setFlash('error', 'Failed to assign grants.');
             }
-            
+
             $this->redirect('/grants');
         }
     }
@@ -224,14 +244,14 @@ class GrantController extends BaseController {
 
     public function updateAssignment() {
         $this->requireRole(['faculty_pi']);
-        
+
         if ($this->isPost()) {
             $userID = (int)$this->getPost('userID');
-            $grantIDs = $_POST['grantIDs'] ?? []; 
-            $billingPercentage = (float)$this->getPost('billingPercentage', 100);
+            $grantIDs = $_POST['grantIDs'] ?? [];
+            $postedPercentages = $_POST['billingPercentages'] ?? [];
 
             $users = $this->grantModel->getUsersWithGrants();
-            $targetRole = 'researcher'; 
+            $targetRole = 'researcher';
             foreach ($users as $u) {
                 if ($u['userID'] == $userID) {
                     $targetRole = $u['userType'];
@@ -239,14 +259,34 @@ class GrantController extends BaseController {
                 }
             }
 
+            $perGrantPercentages = [];
+
             if ($targetRole === 'lab_manager') {
-                $billingPercentage = 0;
+                foreach ($grantIDs as $grantID) {
+                    $perGrantPercentages[(int)$grantID] = 0.0;
+                }
             } else {
-                if (!empty($grantIDs)) {
-                    $newTotal = round(count($grantIDs) * $billingPercentage, 2);
+                foreach ($grantIDs as $grantID) {
+                    $gid = (int)$grantID;
+                    if (!isset($postedPercentages[$gid]) || $postedPercentages[$gid] === '') {
+                        $this->setFlash('error', "Please enter a billing percentage for every checked grant.");
+                        $this->redirect('/grants/manage');
+                        return;
+                    }
+                    $pct = (float)$postedPercentages[$gid];
+                    if ($pct <= 0 || $pct > 100) {
+                        $this->setFlash('error', "Each billing percentage must be greater than 0 and at most 100.");
+                        $this->redirect('/grants/manage');
+                        return;
+                    }
+                    $perGrantPercentages[$gid] = $pct;
+                }
+
+                if (!empty($perGrantPercentages)) {
+                    $newTotal = round(array_sum($perGrantPercentages), 2);
 
                     if ($newTotal < 99.99 || $newTotal > 100.01) {
-                        $this->setFlash('error', "Update blocked: You selected " . count($grantIDs) . " grant(s) at {$billingPercentage}%. The total is {$newTotal}%. It must equal exactly 100%.");
+                        $this->setFlash('error', "Update blocked: The total across the " . count($perGrantPercentages) . " checked grant(s) is {$newTotal}%. It must equal exactly 100%.");
                         $this->redirect('/grants/manage');
                         return;
                     }
@@ -256,8 +296,8 @@ class GrantController extends BaseController {
             $this->grantModel->removeAllGrantsFromUser($userID);
 
             $successCount = 0;
-            foreach ($grantIDs as $grantID) {
-                if ($this->grantModel->addUserToGrant((int)$grantID, $userID, $billingPercentage)) {
+            foreach ($perGrantPercentages as $grantID => $pct) {
+                if ($this->grantModel->addUserToGrant($grantID, $userID, $pct)) {
                     $successCount++;
                 }
             }

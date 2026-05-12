@@ -251,7 +251,7 @@ class Grant {
 
     public function addUserToGrant($grantID, $userID, $billingPercentage = 100.00)
     {
-        if ($billingPercentage <= 0 || $billingPercentage > 100) {
+        if ($billingPercentage < 0 || $billingPercentage > 100) {
             return false;
         }
 
