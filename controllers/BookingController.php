@@ -67,7 +67,9 @@ class BookingController extends BaseController {
 
             echo json_encode([
                 'success' => $result['success'],
-                'message' => $result['success'] ? 'Booking requested! Awaiting Lab Manager approval.' : 'Conflict: This time slot is already taken.'
+                'message' => $result['success']
+                    ? 'Booking requested! Awaiting Lab Manager approval.'
+                    : ($result['message'] ?? 'Conflict: This time slot is already taken.')
             ]);
         } catch (Exception $e) {
             echo json_encode([

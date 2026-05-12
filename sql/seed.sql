@@ -99,6 +99,16 @@ VALUES
     (6, 'Quantum Computer Sim',    'available', 4, TRUE,  500.00, 30.00, 20, 15, 100);
 
 -- =========================================================================
+--  EQUIPMENT DEPENDENCIES (Sequential Booking Dependency)
+--  Primary equipment is auto-booked together with its secondary equipment.
+-- =========================================================================
+INSERT INTO EquipmentDependencies (primaryEquipmentID, secondaryEquipmentID)
+VALUES
+    (2, 4),  -- Mass Spectrometer (primary) requires Centrifuge (secondary)
+    (3, 4),  -- Electron Microscope (primary) requires Centrifuge (secondary)
+    (1, 4);  -- Confocal Microscope (primary) requires Centrifuge (secondary)
+
+-- =========================================================================
 --  SAFETY BRIEFINGS
 -- =========================================================================
 INSERT INTO SafetyBriefings (briefingID, equipmentID, briefingContent)

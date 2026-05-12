@@ -43,29 +43,39 @@ class SequentialBookingService {
         
         try {
             $this->db->beginTransaction();
-          
-            $primaryBookingID = $this->bookingModel->createBooking(
-                $userID, 
-                $primaryEquipmentID, 
-                $startTime, 
-                $endTime, 
-                'pending', 
-                false, 
-                null, 
+
+            $primaryResult = $this->bookingModel->createBooking(
+                $userID,
+                $primaryEquipmentID,
+                $startTime,
+                $endTime,
+                'pending',
+                false,
+                null,
                 $grantID
             );
 
+            if ($primaryResult === false) {
+                throw new Exception("Failed to create primary booking.");
+            }
+
+            $primaryBookingID = is_array($primaryResult) ? $primaryResult['bookingID'] : $primaryResult;
+
             foreach ($dependencies as $dep) {
-                $this->bookingModel->createBooking(
-                    $userID, 
-                    $dep['equipmentID'], 
-                    $startTime, 
-                    $endTime, 
-                    'pending', 
-                    true,               
-                    $primaryBookingID,  
+                $secondaryResult = $this->bookingModel->createBooking(
+                    $userID,
+                    $dep['equipmentID'],
+                    $startTime,
+                    $endTime,
+                    'pending',
+                    true,
+                    $primaryBookingID,
                     $grantID
                 );
+
+                if ($secondaryResult === false) {
+                    throw new Exception("Failed to auto-book secondary equipment: {$dep['equipmentName']}.");
+                }
             }
 
             $this->db->commit();

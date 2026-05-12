@@ -47,9 +47,36 @@ require_once __DIR__ . '/../../includes/header.php';
                         </div>
                         
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title fw-bold text-dark mb-4">
+                            <h5 class="card-title fw-bold text-dark mb-3">
                                 <?= htmlspecialchars($item['equipmentName'] ?? 'Equipment Item') ?>
                             </h5>
+
+                            <?php if (!empty($item['dependencies'])): ?>
+                                <div class="mb-3 p-2 rounded border bg-light small">
+                                    <div class="fw-semibold text-secondary mb-1">
+                                        <i class="bi bi-diagram-3 me-1 text-info"></i>
+                                        Auto-books with:
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <?php foreach ($item['dependencies'] as $dep): ?>
+                                            <?php
+                                                $isUnavailable = ($dep['equipmentStatus'] ?? 'available') !== 'available';
+                                                $depBadgeClass = $isUnavailable ? 'bg-danger' : 'bg-info text-dark';
+                                            ?>
+                                            <span class="badge <?= $depBadgeClass ?>"
+                                                  title="<?= $isUnavailable ? 'Currently unavailable — booking will be blocked' : 'Will be auto-booked for the same time slot' ?>">
+                                                <?= htmlspecialchars($dep['equipmentName']) ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php if (empty($item['depsReady'])): ?>
+                                        <div class="text-danger small mt-2">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            One or more required secondary equipment is unavailable — booking is currently blocked.
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
 
                             <div class="mt-auto border-top pt-3">
                                 <div class="d-flex justify-content-between align-items-center mb-3">

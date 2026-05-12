@@ -54,11 +54,14 @@ class EquipmentController extends BaseController {
             $clearanceCheck = $this->clearanceModule->verifyAccess($userID, $eq['equipmentID']);
             $eq['hasAccess'] = $clearanceCheck['success'];
             $eq['accessMessage'] = $clearanceCheck['message'];
-            
-            $eq['depsReady'] = $this->equipmentModel->areDependenciesAvailable($eq['equipmentID']);
-            
-            $eq['canShowBookButton'] = $eq['hasAccess'] && 
-                                       ($eq['equipmentStatus'] === 'available') && 
+
+            // Sequential Booking Dependency: expose the linked secondary equipment
+            // so the researcher can see what will be auto-booked alongside.
+            $eq['dependencies'] = $this->equipmentModel->getDependencies($eq['equipmentID']);
+            $eq['depsReady']    = $this->equipmentModel->areDependenciesAvailable($eq['equipmentID']);
+
+            $eq['canShowBookButton'] = $eq['hasAccess'] &&
+                                       ($eq['equipmentStatus'] === 'available') &&
                                        $eq['depsReady'];
         }
 
@@ -126,7 +129,70 @@ class EquipmentController extends BaseController {
     public function edit($id) {
         $this->requireRole('lab_manager');
         $equipmentInfo = $this->equipmentModel->getEquipmentById($id);
-        $this->view('equipment/edit', ['equipment' => $equipmentInfo]);
+
+        // Secondary Equipment feature: load existing dependencies + selectable pool
+        $dependencies   = $this->equipmentModel->getDependencies($id);
+        $availablePool  = $this->equipmentModel->getAllEquipmentExcept($id);
+
+        // Filter out already-linked secondary equipment from the dropdown pool
+        $linkedIDs = array_column($dependencies, 'equipmentID');
+        $availablePool = array_values(array_filter($availablePool, function ($eq) use ($linkedIDs) {
+            return !in_array($eq['equipmentID'], $linkedIDs);
+        }));
+
+        $this->view('equipment/edit', [
+            'equipment'     => $equipmentInfo,
+            'dependencies'  => $dependencies,
+            'availablePool' => $availablePool
+        ]);
+    }
+
+    public function addDependency($id) {
+        $this->requireRole('lab_manager');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/equipment/edit/' . $id);
+            return;
+        }
+
+        $secondaryID = (int) ($_POST['secondaryEquipmentID'] ?? 0);
+
+        if ($secondaryID <= 0 || $secondaryID == $id) {
+            $this->setFlash('error', 'Invalid secondary equipment selection.');
+            $this->redirect('/equipment/edit/' . $id);
+            return;
+        }
+
+        $success = $this->equipmentModel->addDependency($id, $secondaryID);
+        $this->setFlash(
+            $success ? 'success' : 'error',
+            $success ? 'Secondary equipment linked successfully.' : 'Failed to link secondary equipment.'
+        );
+        $this->redirect('/equipment/edit/' . $id);
+    }
+
+    public function removeDependency($id) {
+        $this->requireRole('lab_manager');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirect('/equipment/edit/' . $id);
+            return;
+        }
+
+        $secondaryID = (int) ($_POST['secondaryEquipmentID'] ?? 0);
+
+        if ($secondaryID <= 0) {
+            $this->setFlash('error', 'Invalid secondary equipment.');
+            $this->redirect('/equipment/edit/' . $id);
+            return;
+        }
+
+        $success = $this->equipmentModel->removeDependency($id, $secondaryID);
+        $this->setFlash(
+            $success ? 'success' : 'error',
+            $success ? 'Secondary equipment unlinked.' : 'Failed to unlink secondary equipment.'
+        );
+        $this->redirect('/equipment/edit/' . $id);
     }
 
     public function store() { 

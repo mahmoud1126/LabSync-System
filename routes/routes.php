@@ -27,6 +27,9 @@ $router->post('/equipment/store',      'EquipmentController', 'store');
 $router->post('/equipment/update/{id}', 'EquipmentController', 'update');
 $router->post('/EquipmentController/book', 'EquipmentController', 'book');
 $router->post('/equipment/acknowledge', 'EquipmentController', 'acknowledgeSafety');
+// --- Secondary Equipment (Sequential Booking Dependency) ---
+$router->post('/equipment/dependency/add/{id}',    'EquipmentController', 'addDependency');
+$router->post('/equipment/dependency/remove/{id}', 'EquipmentController', 'removeDependency');
 
 // --- BOOKINGS & PHASE 1 APPROVALS ---
 $router->get('/bookings', 'BookingController', 'index');

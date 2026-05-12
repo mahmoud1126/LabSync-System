@@ -145,6 +145,18 @@ class Equipment {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getAllEquipmentExcept($equipmentID)
+    {
+        $stmt = $this->db->prepare(
+            "SELECT equipmentID, equipmentName, equipmentStatus
+             FROM Equipment
+             WHERE equipmentID != :id
+             ORDER BY equipmentName ASC"
+        );
+        $stmt->execute([':id' => $equipmentID]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function areDependenciesAvailable($equipmentID)
     {
         $dependencies = $this->getDependencies($equipmentID);

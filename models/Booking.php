@@ -31,7 +31,7 @@ class Booking {
 
         if ($success) {
             $bookingID = $this->db->lastInsertId();
-            $briefingStmt = $this->db->prepare("SELECT content FROM SafetyBriefings WHERE equipmentID = ?");
+            $briefingStmt = $this->db->prepare("SELECT briefingContent FROM SafetyBriefings WHERE equipmentID = ?");
             $briefingStmt->execute([$equipmentID]);
             $content = $briefingStmt->fetchColumn();
 

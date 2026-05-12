@@ -1,6 +1,8 @@
-<?php 
+<?php
 /** @var array $equipment */
-require_once __DIR__ . '/../../includes/header.php'; 
+/** @var array $dependencies */
+/** @var array $availablePool */
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <main>
@@ -130,6 +132,94 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
         </form>
+
+        <!-- =============================================================== -->
+        <!-- Secondary Equipment (Sequential Booking Dependency) management -->
+        <!-- =============================================================== -->
+        <div class="card shadow-sm border-0 mt-4 border-start border-info border-4">
+            <div class="card-header bg-white fw-bold py-3 d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="bi bi-diagram-3 text-info"></i>
+                    Secondary Equipment
+                    <span class="badge bg-light text-dark border ms-2"><?= count($dependencies ?? []) ?></span>
+                </div>
+                <small class="text-muted">Auto-booked alongside this primary equipment</small>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    When a researcher books <strong><?= htmlspecialchars($equipment['equipmentName']) ?></strong>,
+                    every secondary equipment listed below will be reserved for the exact same time slot.
+                    If any one of them is unavailable, the booking is blocked to prevent incomplete setups.
+                </p>
+
+                <?php if (empty($dependencies)): ?>
+                    <div class="alert alert-light border text-muted small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        No secondary equipment linked yet. Add one below.
+                    </div>
+                <?php else: ?>
+                    <ul class="list-group mb-3">
+                        <?php foreach ($dependencies as $dep): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-light text-dark border me-2">#<?= (int) $dep['equipmentID'] ?></span>
+                                    <strong><?= htmlspecialchars($dep['equipmentName']) ?></strong>
+                                    <?php
+                                        $statusClass = match ($dep['equipmentStatus']) {
+                                            'available'          => 'bg-success',
+                                            'in_use'             => 'bg-info text-dark',
+                                            'calibration_needed' => 'bg-warning text-dark',
+                                            'under_maintenance'  => 'bg-danger',
+                                            'locked_out'         => 'bg-dark',
+                                            default              => 'bg-secondary'
+                                        };
+                                    ?>
+                                    <span class="badge <?= $statusClass ?> ms-2">
+                                        <?= ucfirst(str_replace('_', ' ', $dep['equipmentStatus'])) ?>
+                                    </span>
+                                </div>
+                                <form method="POST"
+                                      action="/LabSync-System/equipment/dependency/remove/<?= (int) $equipment['equipmentID'] ?>"
+                                      onsubmit="return confirm('Unlink this secondary equipment?');"
+                                      class="m-0">
+                                    <input type="hidden" name="secondaryEquipmentID" value="<?= (int) $dep['equipmentID'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-x-circle"></i> Unlink
+                                    </button>
+                                </form>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <?php if (!empty($availablePool)): ?>
+                    <form method="POST"
+                          action="/LabSync-System/equipment/dependency/add/<?= (int) $equipment['equipmentID'] ?>"
+                          class="row g-2 align-items-end">
+                        <div class="col-md-9">
+                            <label class="form-label fw-semibold small text-muted text-uppercase">Link new secondary equipment</label>
+                            <select class="form-select" name="secondaryEquipmentID" required>
+                                <option value="">-- Select equipment --</option>
+                                <?php foreach ($availablePool as $opt): ?>
+                                    <option value="<?= (int) $opt['equipmentID'] ?>">
+                                        #<?= (int) $opt['equipmentID'] ?> — <?= htmlspecialchars($opt['equipmentName']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-grid">
+                            <button type="submit" class="btn btn-info text-white">
+                                <i class="bi bi-plus-circle me-1"></i> Link Secondary
+                            </button>
+                        </div>
+                    </form>
+                <?php else: ?>
+                    <div class="alert alert-secondary small mb-0">
+                        Every other piece of equipment is already linked as secondary.
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
 
     </div>
 </main>
