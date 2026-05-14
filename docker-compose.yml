@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    ports:
+      - "80:80"
+    volumes:
+      - ./:/var/www/html
+    depends_on:
+      - mysql
+    environment:
+        DB_HOST: mysql
+        DB_PORT: 3306
+        DB_NAME: labsync
+        DB_USER: root
+        DB_PASS: 123456
+
+  mysql:
+    image: mysql:8.0
+    environment:
+        MYSQL_ROOT_PASSWORD: 123456
+        MYSQL_DATABASE: labsync
+    volumes:
+      # --- THE MAGIC SHIELD: This saves your data permanently ---
+      - mysql_data:/var/lib/mysql
+      # --------------------------------------------------------
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    ports:
+      - "3306:3306"
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: always
+    ports:
+      - "9988:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=123456
+    depends_on:
+      - mysql
+
+# --- YOU MUST DECLARE THE VOLUME AT THE BOTTOM ---
+volumes:
+  mysql_data:

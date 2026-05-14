@@ -1,0 +1,220 @@
+
+
+@import url("https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/cosmo/bootstrap.min.css");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+
+:root {
+    --ls-primary: #2780E3;
+    --ls-success: #3FB618;
+    --ls-info:    #9954BB;
+    --ls-warning: #FF7518;
+    --ls-danger:  #FF0039;
+    --ls-dark:    #373A3C;
+    --ls-light:   #F8F9FA;
+    --ls-border:  #E9ECEF;
+}
+
+
+body {
+    background: #f5f7fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+    padding: 30px 0;
+}
+
+
+.topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--ls-border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    padding: 12px 0;
+}
+
+.logo-mark {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--ls-primary), #1a5fb4);
+    color: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.logo-text {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--ls-dark);
+}
+.logo-text span {
+    color: var(--ls-primary);
+}
+
+.nav-link-custom {
+    color: #555 !important;
+    font-weight: 500;
+    padding: 8px 14px !important;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+.nav-link-custom:hover {
+    background: #f0f4f9;
+    color: var(--ls-primary) !important;
+}
+.nav-link-active {
+    background: rgba(39, 128, 227, 0.1) !important;
+    color: var(--ls-primary) !important;
+}
+
+
+.notif-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: #f0f4f9;
+    color: #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    transition: all 0.15s ease;
+}
+.notif-btn:hover {
+    background: var(--ls-primary);
+    color: #fff;
+}
+
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--ls-primary), #1a5fb4);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+}
+.user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ls-dark);
+}
+.user-role {
+    font-size: 11px;
+    color: #999;
+    text-transform: capitalize;
+}
+
+
+.card {
+    border: 1px solid var(--ls-border);
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.card-header {
+    background: #fff;
+    border-bottom: 1px solid var(--ls-border);
+    padding: 18px 24px;
+    font-weight: 600;
+}
+
+
+.severity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.severity-low      { background: #d4edda; color: #155724; }
+.severity-medium   { background: #fff3cd; color: #856404; }
+.severity-high     { background: #f8d7da; color: #721c24; }
+.severity-critical { background: #FF0039; color: #fff; }
+
+
+.id-badge {
+    display: inline-block;
+    background: #eef3f9;
+    color: var(--ls-primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+
+.table thead th {
+    background: #f9fafc;
+    color: #555;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid var(--ls-border);
+}
+.table tbody tr {
+    transition: background 0.12s ease;
+}
+.table-hover tbody tr:hover {
+    background: #f0f7ff;
+    cursor: pointer;
+}
+
+
+.site-footer {
+    background: #fff;
+    border-top: 1px solid var(--ls-border);
+    padding: 20px 30px;
+    margin-top: auto;
+}
+.footer-text {
+    color: #777;
+    font-size: 13px;
+    margin: 0;
+}
+.footer-link {
+    color: #555;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.15s;
+}
+.footer-link:hover {
+    color: var(--ls-primary);
+}
+
+
+.description-box {
+    background: #fafbfc;
+    padding: 16px;
+    border-radius: 6px;
+    border-left: 4px solid var(--ls-primary);
+    white-space: pre-wrap;
+    color: #333;
+}
+
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+.empty-state i {
+    font-size: 3rem;
+    color: #ccc;
+    margin-bottom: 15px;
+}
